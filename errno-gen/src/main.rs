@@ -15,7 +15,7 @@ use color_eyre::{
     eyre::{bail, Context},
     Result,
 };
-use generate::{generate_bindings, generic_bindings, Bindings};
+use generate::{generate_bindings, generic_bindings, Bindings, Id};
 
 use crate::format::Formatter;
 
@@ -173,7 +173,8 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
 
                     _ = writeln!(
                         platforms,
-                        "{cond}pub mod {plat} {{ pub use super::generic::*; }}"
+                        "{cond}pub mod {} {{ pub use super::generic::*; }}",
+                        Id(plat.as_ref())
                     );
                 }
                 B::Arch(bind) => {
@@ -184,7 +185,7 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
                         outfile.push(format!("{}.rs", plat));
                         write_if_ne(outfile, formatted.as_bytes())?;
                     }
-                    _ = writeln!(platforms, "{cond}pub mod {plat};");
+                    _ = writeln!(platforms, "{cond}pub mod {};", Id(plat.as_ref()));
                 }
             }
         }
@@ -195,9 +196,15 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
                 cond.archs.push(arch.clone());
                 _ = writeln!(
                     rust_archs,
-                    "{cond}pub mod {arch} {{ pub use super::linux::{plat}::*; }}"
+                    "{cond}pub mod {} {{ pub use super::linux::{}::*; }}",
+                    Id(arch.as_ref()),
+                    Id(plat.as_ref()),
                 );
-                _ = writeln!(rust_archs, "#[cfg(all(target_os = \"linux\", target_arch = {arch:?}))]\npub use {arch}::*;");
+                _ = writeln!(
+                    rust_archs,
+                    "#[cfg(all(target_os = \"linux\", target_arch = {arch:?}))]\npub use {}::*;",
+                    Id(arch.as_ref())
+                );
             }
         }
     }

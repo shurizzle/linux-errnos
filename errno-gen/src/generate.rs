@@ -2,7 +2,7 @@ use std::{
     collections::{BTreeSet, HashMap},
     fmt,
     fs::File,
-    io::{BufRead, BufReader, Lines, Write},
+    io::{BufRead, BufReader, Lines},
     path::{Path, PathBuf},
 };
 
@@ -11,9 +11,10 @@ use color_eyre::{
     eyre::{bail, Context},
     Result,
 };
+use normalize_path::NormalizePath;
 
 pub enum Instruction {
-    Include(Box<str>),
+    Include(Box<Path>),
     Errno(ParsedErrno),
 }
 
@@ -22,6 +23,77 @@ pub enum ParsedErrno {
     Define(Box<str>, i32, Option<Box<str>>),
     Alias(Box<str>, Box<str>, Option<Box<str>>),
     Undef(Box<str>),
+}
+
+pub struct Id<'a>(pub &'a str);
+
+impl<'a> Id<'a> {
+    const KEYWORDS: &'static [&'static str] = [
+        "as",
+        "break",
+        "const",
+        "continue",
+        "crate",
+        "else",
+        "enum",
+        "extern",
+        "false",
+        "fn",
+        "for",
+        "if",
+        "impl",
+        "in",
+        "let",
+        "loop",
+        "match",
+        "mod",
+        "move",
+        "mut",
+        "pub",
+        "ref",
+        "return",
+        "self",
+        "Self",
+        "static",
+        "struct",
+        "super",
+        "trait",
+        "true",
+        "type",
+        "unsafe",
+        "use",
+        "where",
+        "while",
+        "async",
+        "await",
+        "dyn",
+        "abstract",
+        "become",
+        "box",
+        "do",
+        "final",
+        "macro",
+        "override",
+        "priv",
+        "typeof",
+        "unsized",
+        "virtual",
+        "yield",
+        "try",
+        "macro_rules",
+        "union",
+    ]
+    .as_slice();
+}
+
+impl<'a> fmt::Display for Id<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if Self::KEYWORDS.contains(&self.0) {
+            write!(f, "r#{}", self.0)
+        } else {
+            fmt::Display::fmt(self.0, f)
+        }
+    }
 }
 
 fn parse_line(line: &str) -> Option<Instruction> {
@@ -106,23 +178,9 @@ fn parse_line(line: &str) -> Option<Instruction> {
         let path = unsafe {
             line.get_unchecked(..(line.char_indices().find(|&(_, c)| c == '>').map(|x| x.0)?))
         };
-        if std::path::MAIN_SEPARATOR == '/' {
-            Some(Instruction::Include(path.to_string().into_boxed_str()))
-        } else {
-            Some(Instruction::Include(
-                path.trim()
-                    .chars()
-                    .map(|c| {
-                        if c == '/' {
-                            std::path::MAIN_SEPARATOR
-                        } else {
-                            c
-                        }
-                    })
-                    .collect::<String>()
-                    .into_boxed_str(),
-            ))
-        }
+        Some(Instruction::Include(
+            Path::new(path).normalize().into_boxed_path(),
+        ))
     } else if let Some(line) = line.strip_prefix("define") {
         let line = space1(line)?;
         let (name, line) = id(line)?;
@@ -189,23 +247,53 @@ impl FileResolver {
     pub fn resolve<P: AsRef<Path>>(&mut self, path: P) -> std::io::Result<Box<Path>> {
         let path = path.as_ref();
         {
-            let mut resolved = PathBuf::from(self.base.as_ref());
-            resolved.push("arch");
-            resolved.push(self.arch.as_ref());
-            resolved.push("include");
-            resolved.push(path);
-            if resolved.exists() {
-                return Ok(resolved.into_boxed_path());
+            let mut base = PathBuf::from(self.base.as_ref());
+            base.push("arch");
+            base.push(self.arch.as_ref());
+            base.push("include");
+
+            {
+                let mut resolved = base.clone();
+                resolved.push(path);
+                if resolved.exists() {
+                    return Ok(resolved.into_boxed_path());
+                }
+            }
+            {
+                let mut resolved = base;
+                resolved.push("uapi");
+                resolved.push(path);
+                if resolved.exists() {
+                    return Ok(resolved.into_boxed_path());
+                }
             }
         }
+
         {
-            let mut resolved = PathBuf::from(self.base.as_ref());
-            resolved.push("include");
-            resolved.push(path);
-            if resolved.exists() {
-                return Ok(resolved.into_boxed_path());
+            let mut base = PathBuf::from(self.base.as_ref());
+            base.push("include");
+
+            {
+                let mut resolved = base.clone();
+                resolved.push(path);
+                if resolved.exists() {
+                    return Ok(resolved.into_boxed_path());
+                }
+            }
+            {
+                let mut resolved = base.clone();
+                resolved.push("uapi");
+                resolved.push(path);
+                if resolved.exists() {
+                    return Ok(resolved.into_boxed_path());
+                }
             }
         }
+
+        if path == Path::new("asm/errno.h") {
+            return self.resolve("uapi/asm-generic/errno.h");
+        }
+
         Err(std::io::Error::new(
             std::io::ErrorKind::NotFound,
             format!("File not found {}", path.display()),
@@ -317,11 +405,11 @@ impl fmt::Display for Bindings {
             min = min.map_or(Some(*no), |min| Some(min.min(*no)));
             errs.push(*no);
             writeln!(f, "    /// {}", desc)?;
-            writeln!(f, "    pub const {}: Self = Self({});", name, no)?;
+            writeln!(f, "    pub const {}: Self = Self({});", Id(name), no)?;
         }
         for (alias, name) in &self.aliases {
             writeln!(f, "    /// Alias for {}", name)?;
-            writeln!(f, "    pub const {}: Self = Self::{};", alias, name)?;
+            writeln!(f, "    pub const {}: Self = Self::{};", Id(alias), name)?;
         }
         if let Some(min) = min.take() {
             writeln!(f, "\n    pub const MIN: i32 = {};", min)?;
@@ -352,68 +440,6 @@ impl fmt::Display for Bindings {
 pub fn generate_bindings<P: AsRef<Path>, A: AsRef<str>>(srcdir: P, arch: A) -> Result<Bindings> {
     let srcdir = srcdir.as_ref();
     let arch = arch.as_ref();
-
-    {
-        let mut archdir = PathBuf::from(srcdir);
-        archdir.push("arch");
-        archdir.push(arch);
-        archdir.push("include");
-
-        let mut srcdir = archdir.clone();
-        srcdir.push("asm");
-        std::fs::create_dir_all(&srcdir).wrap_err("Failed to generate bindings")?;
-        srcdir.push("errno.h");
-        if !srcdir.exists() {
-            let is_generic = {
-                let mut uapi = archdir;
-                uapi.push("uapi");
-                uapi.push("asm");
-                uapi.push("errno.h");
-                !uapi.exists()
-            };
-
-            File::create(srcdir)
-                .wrap_err("Failed to generate bindings")?
-                .write_all(if is_generic {
-                    b"#include <uapi/asm-generic/errno.h>\n"
-                } else {
-                    b"#include <uapi/asm/errno.h>\n"
-                })
-                .wrap_err("Failed to generate bindings")?;
-        }
-    }
-
-    {
-        let mut srcdir = PathBuf::from(srcdir);
-        srcdir.push("arch");
-        srcdir.push(arch);
-        srcdir.push("include");
-        srcdir.push("asm-generic");
-        std::fs::create_dir_all(&srcdir).wrap_err("Failed to generate bindings")?;
-        srcdir.push("errno.h");
-        if !srcdir.exists() {
-            File::create(srcdir)
-                .wrap_err("Failed to generate bindings")?
-                .write_all(b"#include <uapi/asm-generic/errno.h>\n")
-                .wrap_err("Failed to generate bindings")?;
-        }
-    }
-
-    {
-        let mut srcdir = PathBuf::from(srcdir);
-        srcdir.push("arch");
-        srcdir.push(arch);
-        srcdir.push("include");
-        srcdir.push("asm-generic");
-        std::fs::create_dir_all(&srcdir).wrap_err("Failed to generate bindings")?;
-        srcdir.push("errno-base.h");
-        if !srcdir.exists() {
-            File::create(srcdir)
-                .wrap_err("Failed to generate bindings")?
-                .write_all(b"#include <uapi/asm-generic/errno-base.h>\n")
-                .wrap_err("Failed to generate bindings")?;
-        }
-    }
 
     let parser = RecursiveParser {
         resolver: FileResolver {
