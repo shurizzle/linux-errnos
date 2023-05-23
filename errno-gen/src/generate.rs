@@ -1,110 +1,30 @@
 use std::{
-    cell::RefCell,
     collections::{BTreeSet, HashMap},
     fmt,
     fs::File,
-    io::{BufRead, BufReader, Write},
+    io::{BufRead, BufReader, Lines, Write},
     path::{Path, PathBuf},
-    rc::Rc,
 };
 
 use atoi::FromRadix10;
-use bindgen::callbacks::ParseCallbacks;
 use color_eyre::{
-    eyre::{bail, eyre, Context},
+    eyre::{bail, Context},
     Result,
 };
 
-pub fn interesting_files<P: AsRef<Path>, S: AsRef<str>>(
-    srcdir: P,
-    arch: S,
-) -> Result<Vec<Box<Path>>> {
-    let srcdir = srcdir.as_ref();
-    let arch = arch.as_ref();
-    let archdir = {
-        let mut p = PathBuf::from(srcdir);
-        p.push("arch");
-        p.push(arch);
-        p.push("include");
-        p
-    };
-    let linuxdir = {
-        let mut p = PathBuf::from(srcdir);
-        p.push("include");
-        p
-    };
-
-    {
-        let mut srcdir = archdir.clone();
-
-        srcdir.push("asm");
-        std::fs::create_dir_all(&srcdir).wrap_err("Failed to generate bindings")?;
-        srcdir.push("errno.h");
-        if !srcdir.exists() {
-            let mut f = File::create(srcdir).wrap_err("Failed to generate bindings")?;
-            f.write_all(b"#include <uapi/asm-generic/errno.h>\n")
-                .wrap_err("Failed to generate bindings")?;
-        }
-    }
-
-    {
-        let mut srcdir = archdir.clone();
-        srcdir.push("asm-generic");
-        std::fs::create_dir_all(&srcdir).wrap_err("Failed to generate bindings")?;
-        srcdir.push("errno-base.h");
-        if !srcdir.exists() {
-            let mut f = File::create(srcdir).wrap_err("Failed to generate bindings")?;
-            f.write_all(b"#include <uapi/asm-generic/errno-base.h>\n")
-                .wrap_err("Failed to generate bindings")?;
-        }
-    }
-
-    #[derive(Debug)]
-    struct RegisterFiles(Rc<RefCell<Vec<Box<Path>>>>);
-    impl ParseCallbacks for RegisterFiles {
-        fn include_file(&self, filename: &str) {
-            self.0
-                .borrow_mut()
-                .push(PathBuf::from(filename).into_boxed_path());
-        }
-    }
-
-    let visited = Rc::new(RefCell::<Vec<Box<Path>>>::new(vec![{
-        let mut p = linuxdir.clone();
-        p.push("linux");
-        p.push("errno.h");
-        p.into_boxed_path()
-    }]));
-
-    _ = bindgen::builder()
-        .detect_include_paths(false)
-        .clang_arg("-nostdinc")
-        .clang_arg("-I")
-        .clang_arg(archdir.as_os_str().to_string_lossy().to_string())
-        .clang_arg("-I")
-        .clang_arg(linuxdir.as_os_str().to_string_lossy().to_string())
-        .parse_callbacks(Box::new(RegisterFiles(visited.clone())))
-        .header_contents("__bindings.h", "#include <linux/errno.h>")
-        .generate()
-        .wrap_err("Failed to generate bindings")?;
-
-    let mut visited = Rc::try_unwrap(visited)
-        .ok()
-        .ok_or_else(|| eyre!("Failed to generate bindings"))?
-        .into_inner();
-    visited.sort();
-    visited.dedup();
-
-    Ok(visited)
+pub enum Instruction {
+    Include(Box<str>),
+    Errno(ParsedErrno),
 }
 
 #[derive(Debug)]
 pub enum ParsedErrno {
     Define(Box<str>, i32, Option<Box<str>>),
     Alias(Box<str>, Box<str>, Option<Box<str>>),
+    Undef(Box<str>),
 }
 
-fn parse_line(line: &str) -> Option<ParsedErrno> {
+fn parse_line(line: &str) -> Option<Instruction> {
     fn space0(b: &str) -> &str {
         b.trim_start()
     }
@@ -180,22 +100,169 @@ fn parse_line(line: &str) -> Option<ParsedErrno> {
     let line = space0(line);
     let line = line.strip_prefix('#')?;
     let line = space0(line);
-    let line = line.strip_prefix("define")?;
-    let line = space1(line)?;
-    let (name, line) = id(line)?;
-    let line = space1(line)?;
+    if let Some(line) = line.strip_prefix("include") {
+        let line = space0(line);
+        let line = line.strip_prefix('<')?;
+        let path = unsafe {
+            line.get_unchecked(..(line.char_indices().find(|&(_, c)| c == '>').map(|x| x.0)?))
+        };
+        if std::path::MAIN_SEPARATOR == '/' {
+            Some(Instruction::Include(path.to_string().into_boxed_str()))
+        } else {
+            Some(Instruction::Include(
+                path.trim()
+                    .chars()
+                    .map(|c| {
+                        if c == '/' {
+                            std::path::MAIN_SEPARATOR
+                        } else {
+                            c
+                        }
+                    })
+                    .collect::<String>()
+                    .into_boxed_str(),
+            ))
+        }
+    } else if let Some(line) = line.strip_prefix("define") {
+        let line = space1(line)?;
+        let (name, line) = id(line)?;
+        let line = space1(line)?;
 
-    if let Some((value, line)) = int::<i32>(line) {
-        Some(ParsedErrno::Define(name, value, comment(line)))
-    } else if line.starts_with('E') {
-        let (alias, line) = id(line)?;
-        Some(ParsedErrno::Alias(
-            name,
-            alias.to_string().into_boxed_str(),
-            comment(line),
-        ))
+        if let Some((value, line)) = int::<i32>(line) {
+            Some(Instruction::Errno(ParsedErrno::Define(
+                name,
+                value,
+                comment(line),
+            )))
+        } else if line.starts_with('E') {
+            let (alias, line) = id(line)?;
+            Some(Instruction::Errno(ParsedErrno::Alias(
+                name,
+                alias.to_string().into_boxed_str(),
+                comment(line),
+            )))
+        } else {
+            None
+        }
+    } else if let Some(line) = line.strip_prefix("undef") {
+        let line = space1(line)?;
+        let (name, _) = id(line)?;
+        Some(Instruction::Errno(ParsedErrno::Undef(name)))
     } else {
         None
+    }
+}
+
+pub struct FileParser(Lines<BufReader<File>>);
+
+impl FileParser {
+    #[inline]
+    pub fn open<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
+        let path = path.as_ref();
+        File::open(path).map(|f| Self(BufReader::new(f).lines()))
+    }
+}
+
+impl Iterator for FileParser {
+    type Item = std::io::Result<Instruction>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let line = match self.0.next()? {
+                Ok(line) => line,
+                Err(err) => return Some(Err(err)),
+            };
+
+            if let Some(inst) = parse_line(&line) {
+                return Some(Ok(inst));
+            }
+        }
+    }
+}
+
+pub struct FileResolver {
+    base: Box<Path>,
+    arch: Box<str>,
+}
+
+impl FileResolver {
+    pub fn resolve<P: AsRef<Path>>(&mut self, path: P) -> std::io::Result<Box<Path>> {
+        let path = path.as_ref();
+        {
+            let mut resolved = PathBuf::from(self.base.as_ref());
+            resolved.push("arch");
+            resolved.push(self.arch.as_ref());
+            resolved.push("include");
+            resolved.push(path);
+            if resolved.exists() {
+                return Ok(resolved.into_boxed_path());
+            }
+        }
+        {
+            let mut resolved = PathBuf::from(self.base.as_ref());
+            resolved.push("include");
+            resolved.push(path);
+            if resolved.exists() {
+                return Ok(resolved.into_boxed_path());
+            }
+        }
+        Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            format!("File not found {}", path.display()),
+        ))
+    }
+}
+
+pub struct RecursiveParser {
+    stack: Vec<FileParser>,
+    current: Option<FileParser>,
+    resolver: FileResolver,
+}
+
+impl Iterator for RecursiveParser {
+    type Item = std::io::Result<ParsedErrno>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if let Some(mut current) = self.current.take() {
+                if let Some(inst) = current.next() {
+                    match inst {
+                        Err(err) => {
+                            self.stack.clear();
+                            return Some(Err(err));
+                        }
+                        Ok(Instruction::Include(path)) => {
+                            let path = match self.resolver.resolve(path.as_ref()) {
+                                Ok(path) => path,
+                                Err(err) => {
+                                    self.stack.clear();
+                                    return Some(Err(err));
+                                }
+                            };
+                            self.stack.push(current);
+                            self.current = Some(match FileParser::open(path) {
+                                Ok(iter) => iter,
+                                Err(err) => {
+                                    self.stack.clear();
+                                    return Some(Err(err));
+                                }
+                            });
+                            continue;
+                        }
+                        Ok(Instruction::Errno(errno)) => {
+                            self.current = Some(current);
+                            return Some(Ok(errno));
+                        }
+                    }
+                }
+            }
+
+            if let Some(current) = self.stack.pop() {
+                self.current = Some(current);
+            } else {
+                return None;
+            }
+        }
     }
 }
 
@@ -216,6 +283,8 @@ impl PartialEq for Bindings {
                 if a.1 != b.1 {
                     return false;
                 }
+            } else {
+                return false;
             }
         }
 
@@ -224,6 +293,8 @@ impl PartialEq for Bindings {
                 if a.1 != b.1 {
                     return false;
                 }
+            } else {
+                return false;
             }
         }
 
@@ -282,61 +353,135 @@ pub fn generate_bindings<P: AsRef<Path>, A: AsRef<str>>(srcdir: P, arch: A) -> R
     let srcdir = srcdir.as_ref();
     let arch = arch.as_ref();
 
+    {
+        let mut archdir = PathBuf::from(srcdir);
+        archdir.push("arch");
+        archdir.push(arch);
+        archdir.push("include");
+
+        let mut srcdir = archdir.clone();
+        srcdir.push("asm");
+        std::fs::create_dir_all(&srcdir).wrap_err("Failed to generate bindings")?;
+        srcdir.push("errno.h");
+        if !srcdir.exists() {
+            let is_generic = {
+                let mut uapi = archdir;
+                uapi.push("uapi");
+                uapi.push("asm");
+                uapi.push("errno.h");
+                !uapi.exists()
+            };
+
+            File::create(srcdir)
+                .wrap_err("Failed to generate bindings")?
+                .write_all(if is_generic {
+                    b"#include <uapi/asm-generic/errno.h>\n"
+                } else {
+                    b"#include <uapi/asm/errno.h>\n"
+                })
+                .wrap_err("Failed to generate bindings")?;
+        }
+    }
+
+    {
+        let mut srcdir = PathBuf::from(srcdir);
+        srcdir.push("arch");
+        srcdir.push(arch);
+        srcdir.push("include");
+        srcdir.push("asm-generic");
+        std::fs::create_dir_all(&srcdir).wrap_err("Failed to generate bindings")?;
+        srcdir.push("errno.h");
+        if !srcdir.exists() {
+            File::create(srcdir)
+                .wrap_err("Failed to generate bindings")?
+                .write_all(b"#include <uapi/asm-generic/errno.h>\n")
+                .wrap_err("Failed to generate bindings")?;
+        }
+    }
+
+    {
+        let mut srcdir = PathBuf::from(srcdir);
+        srcdir.push("arch");
+        srcdir.push(arch);
+        srcdir.push("include");
+        srcdir.push("asm-generic");
+        std::fs::create_dir_all(&srcdir).wrap_err("Failed to generate bindings")?;
+        srcdir.push("errno-base.h");
+        if !srcdir.exists() {
+            File::create(srcdir)
+                .wrap_err("Failed to generate bindings")?
+                .write_all(b"#include <uapi/asm-generic/errno-base.h>\n")
+                .wrap_err("Failed to generate bindings")?;
+        }
+    }
+
+    let parser = RecursiveParser {
+        resolver: FileResolver {
+            base: PathBuf::from(srcdir).into_boxed_path(),
+            arch: arch.to_string().into_boxed_str(),
+        },
+        current: Some(
+            FileParser::open({
+                let mut p = PathBuf::from(srcdir);
+                p.push("include");
+                p.push("linux");
+                p.push("errno.h");
+                p
+            })
+            .wrap_err("Failed to parse linux headers")?,
+        ),
+        stack: Vec::new(),
+    };
+
     let mut defs = HashMap::new();
     let mut aliases = HashMap::new();
-    let mut nos = BTreeSet::new();
-    for file in interesting_files(srcdir, arch)? {
-        let mut buf = String::new();
-        let mut f = BufReader::new(
-            File::open(&file)
-                .wrap_err_with(|| format!("Failed to generate bindings {}", file.display()))?,
-        );
+    {
+        let mut nos = BTreeSet::new();
 
-        while f
-            .read_line(&mut buf)
-            .wrap_err("Failed to generate bindings")?
-            != 0
-        {
-            if let Some(e) = parse_line(buf.as_str()) {
-                match e {
-                    ParsedErrno::Alias(name, alias, _doc) => {
-                        if defs.contains_key(&name) {
-                            bail!("{} defined multiple times", name);
-                        }
-                        if let Some(other) = aliases.insert(name, alias) {
-                            bail!("{} defined multiple times", other);
-                        }
+        for errno in parser {
+            match errno.wrap_err("Failed to parse linux headers")? {
+                ParsedErrno::Alias(name, alias, _doc) => {
+                    if defs.contains_key(&name) {
+                        bail!("{} defined multiple times", name);
                     }
-                    ParsedErrno::Define(name, value, doc) => {
-                        if aliases.contains_key(&name) {
-                            bail!("{} defined multiple times", name);
+                    if let Some(other) = aliases.insert(name, alias) {
+                        bail!("{} defined multiple times", other);
+                    }
+                }
+                ParsedErrno::Define(name, value, doc) => {
+                    if aliases.contains_key(&name) {
+                        bail!("{} defined multiple times", name);
+                    }
+                    let desc = if let Some(desc) = doc {
+                        desc
+                    } else {
+                        match name.as_ref() {
+                            "ERESTARTSYS" => "Restart syscall",
+                            "ERESTARTNOINTR" => "Restart if no interrupt",
+                            _ => bail!("No description for {name}"),
                         }
-                        let desc = if let Some(desc) = doc {
-                            desc
-                        } else {
-                            match name.as_ref() {
-                                "ERESTARTSYS" => "Restart syscall",
-                                "ERESTARTNOINTR" => "Restart if no interrupt",
-                                _ => bail!("No description for {name}"),
-                            }
-                            .to_string()
-                            .into_boxed_str()
-                        };
+                        .to_string()
+                        .into_boxed_str()
+                    };
 
-                        if nos.contains(&value) {
-                            bail!("Errno {} defined multiple times", value);
-                        } else {
-                            nos.insert(value);
-                        }
+                    if nos.contains(&value) {
+                        bail!("Errno {value} ({name}) defined multiple times");
+                    } else {
+                        nos.insert(value);
+                    }
 
-                        if let Some((other, _)) = defs.insert(name, (value, desc)) {
-                            bail!("{} defined multiple times", other)
+                    if let Some((other, _)) = defs.insert(name, (value, desc)) {
+                        bail!("{} defined multiple times", other)
+                    }
+                }
+                ParsedErrno::Undef(name) => {
+                    if aliases.remove(&name).is_none() {
+                        if let Some((no, _)) = defs.remove(&name) {
+                            nos.remove(&no);
                         }
                     }
                 }
             }
-
-            buf.clear();
         }
     }
 

@@ -1,6 +1,5 @@
 #[cfg(any(
     feature = "aarch64",
-    feature = "alpha",
     feature = "arc",
     feature = "arm",
     feature = "arm64",
@@ -13,17 +12,12 @@
     feature = "microblaze",
     feature = "nios2",
     feature = "openrisc",
-    feature = "parisc",
-    feature = "powerpc",
-    feature = "powerpc64",
     feature = "riscv",
     feature = "riscv32",
     feature = "riscv64",
     feature = "s390",
     feature = "s390x",
     feature = "sh",
-    feature = "sparc",
-    feature = "sparc64",
     feature = "um",
     feature = "x86",
     feature = "x86_64",
@@ -35,13 +29,9 @@
             target_arch = "arm",
             target_arch = "hexagon",
             target_arch = "m68k",
-            target_arch = "powerpc",
-            target_arch = "powerpc64",
             target_arch = "riscv32",
             target_arch = "riscv64",
             target_arch = "s390x",
-            target_arch = "sparc",
-            target_arch = "sparc64",
             target_arch = "x86",
             target_arch = "x86_64"
         )
@@ -50,9 +40,7 @@
 pub mod generic;
 
 #[cfg(feature = "alpha")]
-pub mod alpha {
-    pub use super::generic::*;
-}
+pub mod alpha;
 #[cfg(feature = "arc")]
 pub mod arc {
     pub use super::generic::*;
@@ -108,9 +96,7 @@ pub mod openrisc {
     pub use super::generic::*;
 }
 #[cfg(feature = "parisc")]
-pub mod parisc {
-    pub use super::generic::*;
-}
+pub mod parisc;
 #[cfg(any(
     feature = "powerpc",
     feature = "powerpc64",
@@ -119,9 +105,7 @@ pub mod parisc {
         any(target_arch = "powerpc", target_arch = "powerpc64")
     )
 ))]
-pub mod powerpc {
-    pub use super::generic::*;
-}
+pub mod powerpc;
 #[cfg(any(
     feature = "riscv",
     feature = "riscv32",
@@ -154,9 +138,7 @@ pub mod sh {
         any(target_arch = "sparc", target_arch = "sparc64")
     )
 ))]
-pub mod sparc {
-    pub use super::generic::*;
-}
+pub mod sparc;
 #[cfg(feature = "um")]
 pub mod um {
     pub use super::generic::*;

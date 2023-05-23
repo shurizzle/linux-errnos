@@ -48,8 +48,9 @@ fn main() -> Result<()> {
     let tempdir = tempfile::Builder::new()
         .tempdir()
         .wrap_err("Cannot create a temporary directory")?;
+    let srcdir = tempdir.path();
 
-    real_main(tempdir.path(), outdir.as_str())
+    real_main(srcdir, outdir.as_str())
 }
 
 fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result<()> {
