@@ -43,6 +43,12 @@ macro_rules! def_errno {
                 err.raw_os_error().map(Self)
             }
 
+            #[cfg(feature = "std")]
+            #[inline]
+            pub fn last_os_error() -> Self {
+                Self::from_io_error(::std::io::Error::last_os_error()).unwrap()
+            }
+
             #[cfg(feature = "iter")]
             #[inline]
             pub fn iter() -> ErrnoIter {
