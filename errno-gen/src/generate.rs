@@ -354,12 +354,13 @@ pub fn generate_bindings<P: AsRef<Path>, A: AsRef<str>>(srcdir: P, arch: A) -> R
 }
 
 pub fn generic_bindings<P: AsRef<Path>>(srcdir: P) -> Result<Bindings> {
+    let srcdir = srcdir.as_ref();
     {
-        let srcdir = srcdir.as_ref();
         let mut srcdir = PathBuf::from(srcdir);
         srcdir.push("arch");
         srcdir.push("generic");
         srcdir.push("include");
+        std::fs::create_dir_all(srcdir).wrap_err("Failed to generate bindings")?;
     }
     generate_bindings(srcdir, "generic")
 }
