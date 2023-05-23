@@ -295,11 +295,17 @@ pub fn generate_bindings<P: AsRef<Path>, A: AsRef<str>>(srcdir: P, arch: A) -> R
             if let Some(e) = parse_line(buf.as_str()) {
                 match e {
                     ParsedErrno::Alias(name, alias, _doc) => {
+                        if defs.contains_key(&name) {
+                            bail!("{} defined multiple times", name);
+                        }
                         if let Some(other) = aliases.insert(name, alias) {
                             bail!("{} defined multiple times", other);
                         }
                     }
                     ParsedErrno::Define(name, value, doc) => {
+                        if aliases.contains_key(&name) {
+                            bail!("{} defined multiple times", name);
+                        }
                         let desc = if let Some(desc) = doc {
                             desc
                         } else {
@@ -329,12 +335,20 @@ pub fn generate_bindings<P: AsRef<Path>, A: AsRef<str>>(srcdir: P, arch: A) -> R
         }
     }
 
+    let mut aliases = {
+        let mut t: Vec<(Box<str>, Box<str>)> = Vec::with_capacity(aliases.len());
+        for (a, b) in aliases {
+            if !defs.contains_key(&b) {
+                bail!("Alias to unknown error {}", b);
+            }
+            t.push((a, b));
+        }
+        t
+    };
+    aliases.sort_by(|a, b| Ord::cmp(a.0.as_ref(), b.0.as_ref()));
     let mut defines: Vec<(Box<str>, i32, Box<str>)> =
         defs.into_iter().map(|(a, (b, c))| (a, b, c)).collect();
     defines.sort_by_key(|t| t.1);
-    let mut aliases: Vec<(Box<str>, Box<str>)> = aliases.into_iter().map(|(a, b)| (a, b)).collect();
-    aliases.sort_by(|a, b| Ord::cmp(a.0.as_ref(), b.0.as_ref()));
-    // TODO: check alias validity
 
     Ok(Bindings { defines, aliases })
 }
