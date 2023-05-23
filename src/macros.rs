@@ -65,7 +65,7 @@ macro_rules! def_errno {
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 match self.name_and_description() {
                     Some((name, desc)) => {
-                        write!(f, "{} {name} ({desc})", -self.0)
+                        write!(f, "{} {} ({})", -self.0, name, desc)
                     }
                     None => {
                         if self.is_valid() {
