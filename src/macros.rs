@@ -43,10 +43,15 @@ macro_rules! def_errno {
                 err.raw_os_error().map(Self)
             }
 
-            #[cfg(feature = "std")]
+            #[cfg(all(feature = "std", not(feature = "libc")))]
             #[inline]
             pub fn last_os_error() -> Self {
                 Self::from_io_error(::std::io::Error::last_os_error()).unwrap()
+            }
+
+            #[cfg(feature = "libc")]
+            pub fn last_os_error() -> Self {
+                Self(unsafe { *libc::__errno_location() })
             }
 
             #[cfg(feature = "iter")]
