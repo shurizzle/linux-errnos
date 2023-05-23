@@ -258,7 +258,12 @@ impl fmt::Display for Bindings {
         if let Some(max) = max.take() {
             writeln!(f, "    pub const MAX: i32 = {};", max)?;
         }
-        writeln!(f, "\n    const ALL: [i32; {}] = {:?};", errs.len(), errs)?;
+        writeln!(
+            f,
+            "\n#[cfg(feture = \"iter\")]\n    const ALL: [i32; {}] = {:?};",
+            errs.len(),
+            errs
+        )?;
         writeln!(f,
         "\n    pub(crate) fn name_and_description(&self) -> Option<(&'static str, &'static str)> {{"
     )?;

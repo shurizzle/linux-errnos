@@ -42,6 +42,12 @@ macro_rules! def_errno {
             pub fn from_io_error(err: ::std::io::Error) -> ::core::option::Option<Self> {
                 err.raw_os_error().map(Self)
             }
+
+            #[cfg(feature = "iter")]
+            #[inline]
+            pub fn iter() -> ErrnoIter {
+                ErrnoIter(Self::ALL.iter())
+            }
         }
 
         impl ::core::fmt::Display for Errno {
@@ -80,6 +86,65 @@ macro_rules! def_errno {
 
         #[cfg(feature = "std")]
         impl ::std::error::Error for Errno {}
+
+        #[cfg(feature = "iter")]
+        pub struct ErrnoIter(::core::slice::Iter<'static, i32>);
+
+        #[cfg(feature = "iter")]
+        impl ::core::iter::Iterator for ErrnoIter {
+            type Item = Errno;
+
+            #[inline]
+            fn next(&mut self) -> ::core::option::Option<Self::Item> {
+                self.0.next().copied().map(Errno)
+            }
+
+            #[inline]
+            fn size_hint(&self) -> (usize, ::core::option::Option<usize>) {
+                self.0.size_hint()
+            }
+
+            #[inline]
+            fn count(self) -> usize
+            where
+                Self: Sized,
+            {
+                self.0.count()
+            }
+
+            #[inline]
+            fn last(self) -> ::core::option::Option<Self::Item>
+            where
+                Self: Sized,
+            {
+                self.0.last().copied().map(Errno)
+            }
+
+            fn nth(&mut self, n: usize) -> ::core::option::Option<Self::Item> {
+                self.0.nth(n).copied().map(Errno)
+            }
+        }
+
+        #[cfg(feature = "iter")]
+        impl ::core::iter::ExactSizeIterator for ErrnoIter {
+            #[inline]
+            fn len(&self) -> usize {
+                self.0.len()
+            }
+        }
+
+        #[cfg(feature = "iter")]
+        impl ::core::iter::DoubleEndedIterator for ErrnoIter {
+            #[inline]
+            fn next_back(&mut self) -> ::core::option::Option<Self::Item> {
+                self.0.next_back().copied().map(Errno)
+            }
+
+            #[inline]
+            fn nth_back(&mut self, n: usize) -> ::core::option::Option<Self::Item> {
+                self.0.nth_back(n).copied().map(Errno)
+            }
+        }
     };
 }
 

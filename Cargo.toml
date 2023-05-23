@@ -12,6 +12,7 @@ path = "src/lib.rs"
 [features]
 default = ["std"]
 std = []
+iter = []
 
 # architectures
 aarch64 = []
