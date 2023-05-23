@@ -128,6 +128,11 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
     let mut rust_archs = Vec::new();
     rust_archs.extend_from_slice("#![cfg_attr(not(feature = \"std\"), no_std)]\n\n".as_bytes());
     rust_archs.extend_from_slice("pub(crate) mod macros;\npub mod linux;\n\n".as_bytes());
+    let archs = {
+        let mut a = archs.into_iter().collect::<Vec<_>>();
+        a.sort_by(|a, b| Ord::cmp(a.0.as_str(), b.0.as_str()));
+        a
+    };
     for (plat, bind) in archs {
         let archs = 'mapping: {
             for (p, archs) in MAPPING.iter().copied() {
