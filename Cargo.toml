@@ -1,0 +1,84 @@
+[workspace]
+exclude = ["errno-gen"]
+
+[package]
+name = "linux-errno"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = ["std"]
+std = []
+
+# architectures
+aarch64 = []
+alpha = []
+arc = []
+arm = []
+arm64 = []
+csky = []
+generic = []
+hexagon = []
+ia64 = []
+loongarch = []
+m68k = []
+microblaze = []
+mips = []
+mips64 = []
+nios2 = []
+openrisc = []
+parisc = []
+powerpc = []
+powerpc64 = []
+riscv = []
+riscv32 = []
+riscv64 = []
+s390 = []
+s390x = []
+sh = []
+sparc = []
+sparc64 = []
+um = []
+x86 = []
+x86_64 = []
+xtensa = []
+all = [
+  "aarch64",
+  "alpha",
+  "arc",
+  "arm",
+  "arm64",
+  "csky",
+  "generic",
+  "hexagon",
+  "ia64",
+  "loongarch",
+  "m68k",
+  "microblaze",
+  "mips",
+  "mips64",
+  "nios2",
+  "openrisc",
+  "parisc",
+  "powerpc",
+  "powerpc64",
+  "riscv",
+  "riscv32",
+  "riscv64",
+  "s390",
+  "s390x",
+  "sh",
+  "sparc",
+  "sparc64",
+  "um",
+  "x86",
+  "x86_64",
+  "xtensa",
+]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

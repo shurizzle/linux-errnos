@@ -1,0 +1,4 @@
+/target
+/errno-gen/target
+/Cargo.lock
+/errno-gen/Cargo.lock
