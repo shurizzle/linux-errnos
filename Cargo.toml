@@ -10,7 +10,7 @@ edition = "2018"
 path = "src/lib.rs"
 
 [features]
-default = ["std"]
+default = []
 std = []
 iter = []
 libc-compat = ["libc"]
