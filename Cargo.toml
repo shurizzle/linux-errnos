@@ -5,6 +5,7 @@ exclude = ["errno-gen"]
 name = "linux-errno"
 version = "0.0.1"
 edition = "2018"
+metadata = { msrv = "1.38.0" }
 
 [lib]
 path = "src/lib.rs"
