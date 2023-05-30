@@ -21,6 +21,15 @@ pub mod hexagon {
 }
 #[cfg(all(target_os = "linux", target_arch = "hexagon"))]
 pub use hexagon::*;
+#[cfg(any(
+    feature = "loongarch64",
+    all(target_os = "linux", target_arch = "loongarch64")
+))]
+pub mod loongarch64 {
+    pub use super::linux::loongarch::*;
+}
+#[cfg(all(target_os = "linux", target_arch = "loongarch64"))]
+pub use loongarch64::*;
 #[cfg(any(feature = "m68k", all(target_os = "linux", target_arch = "m68k")))]
 pub mod m68k {
     pub use super::linux::m68k::*;

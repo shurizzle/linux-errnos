@@ -27,6 +27,7 @@ generic = []
 hexagon = []
 ia64 = []
 loongarch = []
+loongarch64 = []
 m68k = []
 microblaze = []
 mips = []
@@ -59,6 +60,7 @@ all = [
   "hexagon",
   "ia64",
   "loongarch",
+  "loongarch64",
   "m68k",
   "microblaze",
   "mips",
@@ -81,8 +83,6 @@ all = [
   "x86_64",
   "xtensa",
 ]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 libc = { version = "0.2.144", optional = true }

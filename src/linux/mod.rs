@@ -8,6 +8,7 @@
     feature = "hexagon",
     feature = "ia64",
     feature = "loongarch",
+    feature = "loongarch64",
     feature = "m68k",
     feature = "microblaze",
     feature = "nios2",
@@ -28,6 +29,7 @@
             target_arch = "aarch64",
             target_arch = "arm",
             target_arch = "hexagon",
+            target_arch = "loongarch64",
             target_arch = "m68k",
             target_arch = "riscv32",
             target_arch = "riscv64",
@@ -69,7 +71,11 @@ pub mod hexagon {
 pub mod ia64 {
     pub use super::generic::*;
 }
-#[cfg(feature = "loongarch")]
+#[cfg(any(
+    feature = "loongarch",
+    feature = "loongarch64",
+    all(target_os = "linux", target_arch = "loongarch64")
+))]
 pub mod loongarch {
     pub use super::generic::*;
 }

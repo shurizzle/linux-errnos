@@ -30,6 +30,7 @@ const MAPPING: &[(&str, &[&str])] = [
     ("m68k", ["m68k"].as_slice()),
     ("riscv", ["riscv32", "riscv64"].as_slice()),
     ("sparc", ["sparc", "sparc64"].as_slice()),
+    ("loongarch", ["loongarch64"].as_slice()),
 ]
 .as_slice();
 
