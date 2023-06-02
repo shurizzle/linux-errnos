@@ -1,4 +1,8 @@
-# linux-errno
+# linux-errnos
+
+[![Crates.io](https://img.shields.io/crates/v/linux-errnos?style=for-the-badge)](https://crates.io/crates/linux-errnos)
+[![docs.rs](https://img.shields.io/docsrs/linux-errnos?style=for-the-badge)](https://docs.rs/linux-errnos)
+![Crates.io](https://img.shields.io/crates/l/linux-errnos?style=for-the-badge)
 
 Cross-arch enumeration of Linux error numbers that may vary across archs.
 
