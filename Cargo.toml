@@ -6,7 +6,29 @@ name = "linux-errno"
 version = "0.0.1"
 edition = "2018"
 license = "MIT"
-metadata = { msrv = "1.38.0" }
+
+[package.metadata]
+msrv = "1.38.0"
+
+[package.metdata.docs.rs]
+all-features = true
+default-target = "x86_64-unknown-linux-gnu"
+targets = [
+  "i686-unknown-linux-gnu",
+  "arm-unknown-linux-gnueabi",
+  "aarch64-unknown-linux-gnu",
+  "hexagon-unknown-linux-musl",
+  "s390x-unknown-linux-gnu",
+  "powerpc-unknown-linux-gnu",
+  "powerpc64-unknown-linux-gnu",
+  "mips64-unknown-linux-gnuabi64",
+  "riscv32gc-unknown-linux-gnu",
+  "riscv64gc-unknown-linux-gnu",
+  "sparc-unknown-linux-gnu",
+  "sparc64-unknown-linux-gnu",
+  "loongarch64-unknown-linux-gnu",
+]
+cargo-args = ["-Z", "build-std"]
 
 [[example]]
 name = "list"
