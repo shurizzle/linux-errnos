@@ -1,6 +1,6 @@
 use std::{
     fmt,
-    io::Write,
+    io::{Read, Write},
     path::Path,
     process::{Command, Stdio},
 };
@@ -23,7 +23,13 @@ impl Formatter {
         })
     }
 
+    #[inline]
     pub fn format<S: fmt::Display>(&self, code: S) -> Result<String> {
+        let mut buf = String::new();
+        self.format_in(code, &mut buf).map(|_| buf)
+    }
+
+    pub fn format_in<S: fmt::Display>(&self, code: S, buf: &mut String) -> Result<()> {
         let mut child = Command::new(self.bin.as_os_str())
             .arg("--emit")
             .arg("stdout")
@@ -33,6 +39,7 @@ impl Formatter {
             .spawn()
             .wrap_err("Failed to format file")?;
 
+        // write code to stdin
         {
             let mut stdin = if let Some(stdin) = child.stdin.take() {
                 stdin
@@ -43,12 +50,20 @@ impl Formatter {
             stdin.flush().wrap_err("Failed to format file")?;
         }
 
-        let out = child.wait_with_output().wrap_err("Failed to format file")?;
+        drop(child.stdin.take());
+        drop(child.stderr.take());
+        match child.stdout.take() {
+            Some(mut out) => {
+                out.read_to_string(buf)?;
+            }
+            _ => (),
+        }
 
-        if !out.status.success() {
+        let status = child.wait().wrap_err("Failed to format file")?;
+        if !status.success() {
             bail!("Failed to format file");
         }
 
-        String::from_utf8(out.stdout).wrap_err("Failed to format file")
+        Ok(())
     }
 }

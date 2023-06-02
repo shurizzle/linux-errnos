@@ -1,5 +1,6 @@
 macro_rules! def_errno {
     () => {
+        /// Error number representation.
         #[repr(transparent)]
         #[derive(Copy, Clone, Eq, PartialEq, PartialOrd, Ord, Hash)]
         pub struct Errno(pub(crate) i32);
@@ -99,6 +100,7 @@ macro_rules! def_errno {
         impl ::std::error::Error for Errno {}
 
         #[cfg(feature = "iter")]
+        /// Iterator over all possible error numbers.
         pub struct ErrnoIter(::core::slice::Iter<'static, i32>);
 
         #[cfg(feature = "iter")]

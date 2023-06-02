@@ -99,8 +99,6 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
         }
     }
 
-    let generic = formatter.format(generic)?;
-
     let outdir = {
         let mut path = PathBuf::from(outdir);
         path.push("src");
@@ -111,13 +109,6 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
 
         path
     };
-
-    {
-        let mut outfile = outdir.clone();
-        outfile.push("linux");
-        outfile.push("generic.rs");
-        write_if_ne(outfile, generic.as_bytes())?;
-    }
 
     let mut generic_cond = Cond::default();
     let mut platforms = Vec::new();
@@ -174,17 +165,30 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
 
                     _ = writeln!(
                         platforms,
-                        "{cond}pub mod {} {{ pub use super::generic::*; }}",
-                        Id(plat.as_ref())
+                        "{}pub mod {} {{
+    //! Error number for arch `{}`. {}
+    pub use super::generic::Errno;
+    #[cfg(feature = \"iter\")]
+    pub use super::generic::ErrnoIter;
+}}",
+                        cond,
+                        Id(plat.as_ref()),
+                        plat.as_ref(),
+                        cond.doc(),
                     );
                 }
                 B::Arch(bind) => {
                     {
-                        let formatted = formatter.format(bind)?;
                         let mut outfile = outdir.clone();
                         outfile.push("linux");
                         outfile.push(format!("{}.rs", plat));
-                        write_if_ne(outfile, formatted.as_bytes())?;
+                        write_if_ne(
+                            outfile,
+                            format!("Error numbers for arch `{}`", plat),
+                            cond.doc(),
+                            &formatter,
+                            bind,
+                        )?;
                     }
                     _ = writeln!(platforms, "{cond}pub mod {};", Id(plat.as_ref()));
                 }
@@ -197,43 +201,75 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
                 cond.archs.push(arch.clone());
                 _ = writeln!(
                     rust_archs,
-                    "{cond}pub mod {} {{ pub use super::linux::{}::*; }}",
+                    "{}pub mod {} {{
+    //! Error numbers for arch `{}`. {}
+    pub use super::linux::{}::Errno;
+    #[cfg(feature = \"iter\")]
+    pub use super::linux::{}::ErrnoIter;
+}}",
+                    cond,
                     Id(arch.as_ref()),
+                    arch.as_ref(),
+                    cond.doc(),
+                    Id(plat.as_ref()),
                     Id(plat.as_ref()),
                 );
                 _ = writeln!(
                     rust_archs,
-                    "#[cfg(all(target_os = \"linux\", target_arch = {arch:?}))]\npub use {}::*;",
+                    "#[cfg(all(target_os = \"linux\", target_arch = {arch:?}))]\npub use {}::Errno;
+#[cfg(all(target_os = \"linux\", target_arch = {arch:?}, feature = \"iter\"))]\npub use {}::ErrnoIter;",
+                    Id(arch.as_ref()),
                     Id(arch.as_ref())
                 );
             }
         }
     }
 
-    let platforms = {
-        let mut t = format!("{generic_cond}pub mod generic;\n\n").into_bytes();
-        t.append(&mut platforms);
-        _ = platforms;
-        formatter.format(unsafe { String::from_utf8_unchecked(t) })?
-    };
-
     {
+        struct Platforms<'a>(&'a Cond, String);
+        impl<'a> fmt::Display for Platforms<'a> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(f, "{}pub mod generic;\n\n{}", self.0, self.1)
+            }
+        }
+
         let mut path = outdir.clone();
         path.push("linux");
         path.push("mod.rs");
-        write_if_ne(path, platforms)?;
+        write_if_ne(
+            path,
+            "Error numbers contained in linux/arch/*",
+            Cond::default().doc(),
+            &formatter,
+            Platforms(&generic_cond, unsafe {
+                String::from_utf8_unchecked(platforms)
+            }),
+        )?;
     }
 
-    let archs = {
-        let t = formatter.format(unsafe { String::from_utf8_unchecked(rust_archs) })?;
-        _ = rust_archs;
-        t
-    };
+    {
+        let mut outfile = outdir.clone();
+        outfile.push("linux");
+        outfile.push("generic.rs");
+        write_if_ne(
+            outfile,
+            "Generic error numbers",
+            generic_cond.doc(),
+            &formatter,
+            generic,
+        )?;
+    }
 
     {
         let mut path = outdir;
         path.push("lib.rs");
-        write_if_ne(path, archs)?;
+        write_if_ne(
+            path,
+            "Error numbers for every arch supported by linux",
+            Cond::default().doc(),
+            &formatter,
+            unsafe { String::from_utf8_unchecked(rust_archs) },
+        )?;
     }
 
     {
@@ -261,22 +297,38 @@ enum B {
     Arch(Bindings),
 }
 
-fn write_if_ne<P: AsRef<Path>, B: AsRef<[u8]>>(path: P, content: B) -> Result<()> {
+fn write_if_ne<P, B, S>(
+    path: P,
+    desc: S,
+    doc: CondDoc<'_>,
+    formatter: &Formatter,
+    content: B,
+) -> Result<()>
+where
+    P: AsRef<Path>,
+    B: fmt::Display,
+    S: AsRef<str>,
+{
+    struct DocFile<'a, T: fmt::Display>(&'a str, CondDoc<'a>, T);
+    impl<'a, T: fmt::Display> fmt::Display for DocFile<'a, T> {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "//! {}. {}\n\n{}", self.0, self.1, self.2)
+        }
+    }
+
+    let content = formatter.format(DocFile(desc.as_ref(), doc, content))?;
     let path = path.as_ref();
-    let content = content.as_ref();
 
     match slurp(path) {
         Err(err) if err.kind() != std::io::ErrorKind::NotFound => {
             return Err(err).wrap_err("Failed to write results")
         }
-        Ok(buf) if content == buf => return Ok(()),
+        Ok(buf) if content.as_bytes() == buf => return Ok(()),
         _ => (),
     }
 
     let mut f = File::create(path).wrap_err("Failed to write results")?;
-    std::io::Write::write_all(&mut f, content).wrap_err("Failed to write results")?;
-
-    Ok(())
+    std::io::Write::write_all(&mut f, content.as_bytes()).wrap_err("Failed to write results")
 }
 
 pub fn slurp<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<u8>> {
@@ -297,6 +349,18 @@ pub fn slurp<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<u8>> {
 struct Cond {
     platforms: Vec<Rc<Box<str>>>,
     archs: Vec<Rc<Box<str>>>,
+}
+
+#[derive(Debug)]
+struct CondDoc<'a> {
+    cond: &'a Cond,
+}
+
+impl Cond {
+    #[inline]
+    pub fn doc(&self) -> CondDoc {
+        CondDoc { cond: self }
+    }
 }
 
 impl fmt::Display for Cond {
@@ -351,5 +415,55 @@ impl fmt::Display for Cond {
         }
 
         writeln!(f, ")]") // close 1
+    }
+}
+
+impl<'a> fmt::Display for CondDoc<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut archs = self.cond.archs.clone();
+        archs.sort();
+        archs.dedup();
+        let mut features = self.cond.platforms.clone();
+        features.extend_from_slice(archs.as_slice());
+        features.sort();
+        features.dedup();
+
+        if !features.is_empty() {
+            write!(f, "Activated with feature")?;
+            if features.len() > 1 {
+                write!(f, "s")?;
+            }
+            write!(f, " ")?;
+            let last = features.len() - 1;
+            let mut features = features.into_iter().enumerate();
+            write!(f, "`{}`", features.next().unwrap().1)?;
+            for (i, feat) in features {
+                if i == last {
+                    write!(f, " and ")?;
+                } else {
+                    write!(f, ", ")?;
+                }
+                write!(f, "`{}`", feat)?;
+            }
+
+            if !archs.is_empty() {
+                write!(f, " or with target_os `linux` and target_arch ")?;
+                let last = archs.len() - 1;
+                let mut archs = archs.into_iter().enumerate();
+                write!(f, "`{}`", archs.next().unwrap().1)?;
+                for (i, arch) in archs {
+                    if i == last {
+                        write!(f, " and ")?;
+                    } else {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "`{}`", arch)?;
+                }
+            }
+
+            write!(f, ".")
+        } else {
+            Ok(())
+        }
     }
 }
