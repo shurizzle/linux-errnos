@@ -1,4 +1,4 @@
-//! Error numbers for arch `parisc`. Activated with feature `parisc`.
+//! Error numbers for arch `parisc`.
 
 #![allow(dead_code)]
 

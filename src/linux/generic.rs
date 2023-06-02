@@ -1,4 +1,4 @@
-//! Generic error numbers. Activated with features `aarch64`, `arc`, `arm`, `arm64`, `csky`, `generic`, `hexagon`, `ia64`, `loongarch`, `loongarch64`, `m68k`, `microblaze`, `nios2`, `openrisc`, `riscv`, `riscv32`, `riscv64`, `s390`, `s390x`, `sh`, `um`, `x86`, `x86_64` and `xtensa` or with target_os `linux` and target_arch `aarch64`, `arm`, `hexagon`, `loongarch64`, `m68k`, `riscv32`, `riscv64`, `s390x`, `x86` and `x86_64`.
+//! Generic error numbers.
 
 #![allow(dead_code)]
 

@@ -1,4 +1,4 @@
-//! Error numbers for arch `mips`. Activated with features `mips` and `mips64` or with target_os `linux` and target_arch `mips` and `mips64`.
+//! Error numbers for arch `mips`.
 
 #![allow(dead_code)]
 

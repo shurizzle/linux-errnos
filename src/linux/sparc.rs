@@ -1,4 +1,4 @@
-//! Error numbers for arch `sparc`. Activated with features `sparc` and `sparc64` or with target_os `linux` and target_arch `sparc` and `sparc64`.
+//! Error numbers for arch `sparc`.
 
 #![allow(dead_code)]
 

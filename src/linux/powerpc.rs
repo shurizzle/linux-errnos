@@ -1,4 +1,4 @@
-//! Error numbers for arch `powerpc`. Activated with features `powerpc` and `powerpc64` or with target_os `linux` and target_arch `powerpc` and `powerpc64`.
+//! Error numbers for arch `powerpc`.
 
 #![allow(dead_code)]
 

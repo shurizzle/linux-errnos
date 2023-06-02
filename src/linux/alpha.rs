@@ -1,4 +1,4 @@
-//! Error numbers for arch `alpha`. Activated with feature `alpha`.
+//! Error numbers for arch `alpha`.
 
 #![allow(dead_code)]
 

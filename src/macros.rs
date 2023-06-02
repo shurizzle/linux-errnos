@@ -38,24 +38,24 @@ macro_rules! def_errno {
                 self.name_and_description().map(|x| x.1)
             }
 
-            #[cfg(feature = "std")]
+            #[cfg(any(doc, feature = "std"))]
             #[inline]
             pub fn from_io_error(err: ::std::io::Error) -> ::core::option::Option<Self> {
                 err.raw_os_error().map(Self)
             }
 
-            #[cfg(all(feature = "std", not(feature = "libc")))]
+            #[cfg(any(doc, all(feature = "std", not(feature = "libc"))))]
             #[inline]
             pub fn last_os_error() -> Self {
                 Self::from_io_error(::std::io::Error::last_os_error()).unwrap()
             }
 
-            #[cfg(feature = "libc")]
+            #[cfg(any(doc, feature = "libc"))]
             pub fn last_os_error() -> Self {
                 Self(unsafe { *libc::__errno_location() })
             }
 
-            #[cfg(feature = "iter")]
+            #[cfg(any(doc, feature = "iter"))]
             #[inline]
             pub fn iter() -> ErrnoIter {
                 ErrnoIter(Self::ALL.iter())
@@ -88,7 +88,7 @@ macro_rules! def_errno {
             }
         }
 
-        #[cfg(feature = "std")]
+        #[cfg(any(doc, feature = "std"))]
         impl ::core::convert::From<Errno> for ::std::io::Error {
             #[inline]
             fn from(value: Errno) -> Self {
@@ -96,14 +96,14 @@ macro_rules! def_errno {
             }
         }
 
-        #[cfg(feature = "std")]
+        #[cfg(any(doc, feature = "std"))]
         impl ::std::error::Error for Errno {}
 
-        #[cfg(feature = "iter")]
+        #[cfg(any(doc, feature = "iter"))]
         /// Iterator over all possible error numbers.
         pub struct ErrnoIter(::core::slice::Iter<'static, i32>);
 
-        #[cfg(feature = "iter")]
+        #[cfg(any(doc, feature = "iter"))]
         impl ::core::iter::Iterator for ErrnoIter {
             type Item = Errno;
 
@@ -138,7 +138,7 @@ macro_rules! def_errno {
             }
         }
 
-        #[cfg(feature = "iter")]
+        #[cfg(any(doc, feature = "iter"))]
         impl ::core::iter::ExactSizeIterator for ErrnoIter {
             #[inline]
             fn len(&self) -> usize {
@@ -146,7 +146,7 @@ macro_rules! def_errno {
             }
         }
 
-        #[cfg(feature = "iter")]
+        #[cfg(any(doc, feature = "iter"))]
         impl ::core::iter::DoubleEndedIterator for ErrnoIter {
             #[inline]
             fn next_back(&mut self) -> ::core::option::Option<Self::Item> {
