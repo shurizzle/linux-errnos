@@ -313,7 +313,7 @@ impl Errno {
     pub const ERECALLCONFLICT: Self = Self(530);
     /// NFS file lock reclaim refused
     pub const ENOGRACE: Self = Self(531);
-    /// Alias for EAGAIN
+    /// Alias for [Self::EAGAIN]
     pub const EWOULDBLOCK: Self = Self::EAGAIN;
 
     pub const MIN: i32 = 1;

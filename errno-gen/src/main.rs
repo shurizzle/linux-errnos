@@ -58,18 +58,6 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
     let srcdir = srcdir.as_ref();
     let outdir = outdir.as_ref();
 
-    let target_archs = {
-        let mut buf = Vec::<u8>::new();
-        for arch in MAPPING.iter().flat_map(|x| x.1.iter().copied()) {
-            if !buf.is_empty() {
-                buf.extend_from_slice(b", ");
-            }
-            let _ = write!(buf, "target_arch = {:?}", arch);
-        }
-        buf.shrink_to_fit();
-        unsafe { String::from_utf8_unchecked(buf) }
-    };
-
     let formatter = Formatter::new()?;
 
     std::fs::create_dir_all(srcdir).wrap_err("Failed to create source directory")?;
@@ -231,19 +219,13 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
                 );
                 _ = writeln!(
                     rust_archs,
-                    "#[cfg(all(doc, target_os = \"linux\", target_arch = {:?}))]
-#[doc(cfg(all(target_os = \"linux\", any({}))))]
-#[doc(inline)]
+                    "#[cfg(all(target_os = \"linux\", target_arch = {:?}))]
 pub use {}::Errno;
 #[cfg(all(target_os = \"linux\", target_arch = {:?}, any(doc, feature = \"iter\")))]
-#[doc(cfg(all(target_os = \"linux\", any({}), feature = \"iter\")))]
-#[doc(inline)]
 pub use {}::ErrnoIter;",
                     arch,
-                    target_archs,
                     Id(arch.as_ref()),
                     arch,
-                    target_archs,
                     Id(arch.as_ref())
                 );
             }

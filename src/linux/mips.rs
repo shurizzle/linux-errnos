@@ -313,7 +313,7 @@ impl Errno {
     pub const ENOGRACE: Self = Self(531);
     /// Quota exceeded
     pub const EDQUOT: Self = Self(1133);
-    /// Alias for EAGAIN
+    /// Alias for [Self::EAGAIN]
     pub const EWOULDBLOCK: Self = Self::EAGAIN;
 
     pub const MIN: i32 = 1;

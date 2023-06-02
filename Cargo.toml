@@ -8,11 +8,15 @@ edition = "2018"
 license = "MIT"
 metadata = { msrv = "1.38.0" }
 
+[[example]]
+name = "list"
+required-features = ["iter"]
+
 [lib]
 path = "src/lib.rs"
 
 [features]
-default = []
+default = ["std"]
 std = []
 iter = []
 libc-compat = ["libc"]

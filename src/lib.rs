@@ -13,54 +13,9 @@ pub mod arm {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::arm::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "arm"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "arm"))]
 pub use arm::Errno;
 #[cfg(all(target_os = "linux", target_arch = "arm", any(doc, feature = "iter")))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use arm::ErrnoIter;
 #[cfg(any(
     doc,
@@ -73,58 +28,13 @@ pub mod aarch64 {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::arm64::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "aarch64"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "aarch64"))]
 pub use aarch64::Errno;
 #[cfg(all(
     target_os = "linux",
     target_arch = "aarch64",
     any(doc, feature = "iter")
 ))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use aarch64::ErrnoIter;
 #[cfg(any(
     doc,
@@ -137,58 +47,13 @@ pub mod hexagon {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::hexagon::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "hexagon"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "hexagon"))]
 pub use hexagon::Errno;
 #[cfg(all(
     target_os = "linux",
     target_arch = "hexagon",
     any(doc, feature = "iter")
 ))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use hexagon::ErrnoIter;
 #[cfg(any(
     doc,
@@ -201,58 +66,13 @@ pub mod loongarch64 {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::loongarch::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "loongarch64"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "loongarch64"))]
 pub use loongarch64::Errno;
 #[cfg(all(
     target_os = "linux",
     target_arch = "loongarch64",
     any(doc, feature = "iter")
 ))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use loongarch64::ErrnoIter;
 #[cfg(any(doc, feature = "m68k", all(target_os = "linux", target_arch = "m68k")))]
 pub mod m68k {
@@ -261,54 +81,9 @@ pub mod m68k {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::m68k::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "m68k"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "m68k"))]
 pub use m68k::Errno;
 #[cfg(all(target_os = "linux", target_arch = "m68k", any(doc, feature = "iter")))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use m68k::ErrnoIter;
 #[cfg(any(doc, feature = "mips", all(target_os = "linux", target_arch = "mips")))]
 pub mod mips {
@@ -317,54 +92,9 @@ pub mod mips {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::mips::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "mips"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "mips"))]
 pub use mips::Errno;
 #[cfg(all(target_os = "linux", target_arch = "mips", any(doc, feature = "iter")))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use mips::ErrnoIter;
 #[cfg(any(
     doc,
@@ -377,58 +107,13 @@ pub mod mips64 {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::mips::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "mips64"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "mips64"))]
 pub use mips64::Errno;
 #[cfg(all(
     target_os = "linux",
     target_arch = "mips64",
     any(doc, feature = "iter")
 ))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use mips64::ErrnoIter;
 #[cfg(any(
     doc,
@@ -441,58 +126,13 @@ pub mod powerpc {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::powerpc::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "powerpc"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "powerpc"))]
 pub use powerpc::Errno;
 #[cfg(all(
     target_os = "linux",
     target_arch = "powerpc",
     any(doc, feature = "iter")
 ))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use powerpc::ErrnoIter;
 #[cfg(any(
     doc,
@@ -505,58 +145,13 @@ pub mod powerpc64 {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::powerpc::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "powerpc64"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "powerpc64"))]
 pub use powerpc64::Errno;
 #[cfg(all(
     target_os = "linux",
     target_arch = "powerpc64",
     any(doc, feature = "iter")
 ))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use powerpc64::ErrnoIter;
 #[cfg(any(
     doc,
@@ -569,58 +164,13 @@ pub mod riscv32 {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::riscv::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "riscv32"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "riscv32"))]
 pub use riscv32::Errno;
 #[cfg(all(
     target_os = "linux",
     target_arch = "riscv32",
     any(doc, feature = "iter")
 ))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use riscv32::ErrnoIter;
 #[cfg(any(
     doc,
@@ -633,58 +183,13 @@ pub mod riscv64 {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::riscv::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "riscv64"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "riscv64"))]
 pub use riscv64::Errno;
 #[cfg(all(
     target_os = "linux",
     target_arch = "riscv64",
     any(doc, feature = "iter")
 ))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use riscv64::ErrnoIter;
 #[cfg(any(
     doc,
@@ -697,54 +202,9 @@ pub mod s390x {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::s390::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "s390x"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "s390x"))]
 pub use s390x::Errno;
 #[cfg(all(target_os = "linux", target_arch = "s390x", any(doc, feature = "iter")))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use s390x::ErrnoIter;
 #[cfg(any(
     doc,
@@ -757,54 +217,9 @@ pub mod sparc {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::sparc::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "sparc"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "sparc"))]
 pub use sparc::Errno;
 #[cfg(all(target_os = "linux", target_arch = "sparc", any(doc, feature = "iter")))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use sparc::ErrnoIter;
 #[cfg(any(
     doc,
@@ -817,58 +232,13 @@ pub mod sparc64 {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::sparc::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "sparc64"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "sparc64"))]
 pub use sparc64::Errno;
 #[cfg(all(
     target_os = "linux",
     target_arch = "sparc64",
     any(doc, feature = "iter")
 ))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use sparc64::ErrnoIter;
 #[cfg(any(doc, feature = "x86", all(target_os = "linux", target_arch = "x86")))]
 pub mod x86 {
@@ -877,54 +247,9 @@ pub mod x86 {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::x86::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "x86"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "x86"))]
 pub use x86::Errno;
 #[cfg(all(target_os = "linux", target_arch = "x86", any(doc, feature = "iter")))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use x86::ErrnoIter;
 #[cfg(any(
     doc,
@@ -937,56 +262,11 @@ pub mod x86_64 {
     #[cfg(any(doc, feature = "iter"))]
     pub use super::linux::x86::ErrnoIter;
 }
-#[cfg(all(doc, target_os = "linux", target_arch = "x86_64"))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    )
-)))]
-#[doc(inline)]
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 pub use x86_64::Errno;
 #[cfg(all(
     target_os = "linux",
     target_arch = "x86_64",
     any(doc, feature = "iter")
 ))]
-#[doc(cfg(all(
-    target_os = "linux",
-    any(
-        target_arch = "x86",
-        target_arch = "x86_64",
-        target_arch = "arm",
-        target_arch = "aarch64",
-        target_arch = "hexagon",
-        target_arch = "s390x",
-        target_arch = "powerpc",
-        target_arch = "powerpc64",
-        target_arch = "mips",
-        target_arch = "mips64",
-        target_arch = "m68k",
-        target_arch = "riscv32",
-        target_arch = "riscv64",
-        target_arch = "sparc",
-        target_arch = "sparc64",
-        target_arch = "loongarch64"
-    ),
-    feature = "iter"
-)))]
-#[doc(inline)]
 pub use x86_64::ErrnoIter;

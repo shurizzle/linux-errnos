@@ -6,21 +6,25 @@ macro_rules! def_errno {
         pub struct Errno(pub(crate) i32);
 
         impl Errno {
+            /// Returns a new `Errno` from the given integer.
             #[inline]
             pub fn new(num: i32) -> Self {
                 Self(num)
             }
 
+            /// Converts `Errno` into the under underlining integer.
             #[inline]
             pub fn into_raw(self) -> i32 {
                 self.0
             }
 
+            /// Returns `true` if the error code is in valid range (lower than 4096)
             #[inline]
             pub fn is_valid(&self) -> bool {
                 self.0 < 4096
             }
 
+            /// Returns a new `Errno` from a syscall's result.
             #[inline(always)]
             pub fn from_ret(value: usize) -> ::core::result::Result<usize, Errno> {
                 if value > -4096isize as usize {
@@ -30,31 +34,38 @@ macro_rules! def_errno {
                 }
             }
 
+            /// Returns the name of the error if it's known. Generally the name of the constant.
             pub fn name(&self) -> ::core::option::Option<&'static str> {
                 self.name_and_description().map(|x| x.0)
             }
 
+            /// Returns a description of the error if it's known.
             pub fn description(&self) -> ::core::option::Option<&'static str> {
                 self.name_and_description().map(|x| x.1)
             }
 
+            /// Returns a new `Errno` if the given error is generated from a system error.
+            /// None otherwise.
             #[cfg(any(doc, feature = "std"))]
             #[inline]
             pub fn from_io_error(err: ::std::io::Error) -> ::core::option::Option<Self> {
                 err.raw_os_error().map(Self)
             }
 
+            /// Returns a new `Errno` from last OS error.
             #[cfg(any(doc, all(feature = "std", not(feature = "libc"))))]
             #[inline]
             pub fn last_os_error() -> Self {
                 Self::from_io_error(::std::io::Error::last_os_error()).unwrap()
             }
 
+            /// Returns a new `Errno` from last OS error.
             #[cfg(any(doc, feature = "libc"))]
             pub fn last_os_error() -> Self {
                 Self(unsafe { *libc::__errno_location() })
             }
 
+            /// Returns an iterator `ErrnoIter` over all the known error numbers.
             #[cfg(any(doc, feature = "iter"))]
             #[inline]
             pub fn iter() -> ErrnoIter {

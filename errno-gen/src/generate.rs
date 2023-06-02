@@ -408,7 +408,7 @@ impl fmt::Display for Bindings {
             writeln!(f, "    pub const {}: Self = Self({});", Id(name), no)?;
         }
         for (alias, name) in &self.aliases {
-            writeln!(f, "    /// Alias for {}", name)?;
+            writeln!(f, "    /// Alias for [Self::{}]", Id(name))?;
             writeln!(f, "    pub const {}: Self = Self::{};", Id(alias), name)?;
         }
         if let Some(min) = min.take() {
