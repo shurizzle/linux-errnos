@@ -12,7 +12,7 @@ keywords = ["syscall", "no_std", "linux", "errors", "errno"]
 readme = "README.md"
 repository = "https://github.com/shurizzle/linux-errnos"
 homepage = "https://github.com/shurizzle/linux-errnos"
-documentations = "https://docs.rs/linux-errnos"
+documentation = "https://docs.rs/linux-errnos"
 
 [package.metadata]
 msrv = "1.38.0"
