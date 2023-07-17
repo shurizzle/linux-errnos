@@ -70,7 +70,7 @@ Enable `#![no_std]` support by disabling the default `std` feature:
 
 ```toml
 [dependencies]
-linux-errno = { version = "*", default-features = false }
+linux-errnos = { version = "*", default-features = false }
 ```
 
 # Code generation
