@@ -254,6 +254,7 @@ extern \"C\" {{
         rust_archs,
         "impl Errno {{
     /// Returns a new `Errno` from last OS error.
+    #[inline]
     pub fn last_os_error() -> Self {{
         Self(unsafe {{ *__errno_location() }})
     }}
