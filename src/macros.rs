@@ -110,6 +110,65 @@ macro_rules! def_errno {
         #[cfg(any(doc, feature = "std"))]
         impl ::std::error::Error for Errno {}
 
+        #[cfg(any(doc, feature = "no_std_io-compat"))]
+        impl ::core::convert::From<Errno> for ::no_std_io::io::Error {
+            #[inline]
+            fn from(value: Errno) -> Self {
+                use ::no_std_io::io::ErrorKind::*;
+
+                match value {
+                    // Errno::E2BIG => ArgumentListTooLong.into(),
+                    Errno::EADDRINUSE => AddrInUse.into(),
+                    Errno::EADDRNOTAVAIL => AddrNotAvailable.into(),
+                    // Errno::EBUSY => ResourceBusy.into(),
+                    Errno::ECONNABORTED => ConnectionAborted.into(),
+                    Errno::ECONNREFUSED => ConnectionRefused.into(),
+                    Errno::ECONNRESET => ConnectionReset.into(),
+                    // Errno::EDEADLK => Deadlock.into(),
+                    // Errno::EDQUOT => FilesystemQuotaExceeded.into(),
+                    Errno::EEXIST => AlreadyExists.into(),
+                    // Errno::EFBIG => FileTooLarge.into(),
+                    // Errno::EHOSTUNREACH => HostUnreachable.into(),
+                    Errno::EINTR => Interrupted.into(),
+                    Errno::EINVAL => InvalidInput.into(),
+                    // Errno::EISDIR => IsADirectory.into(),
+                    // Errno::ELOOP => FilesystemLoop.into(),
+                    Errno::ENOENT => NotFound.into(),
+                    // Errno::ENOMEM => OutOfMemory.into(),
+                    // Errno::ENOSPC => StorageFull.into(),
+                    // Errno::ENOSYS => Unsupported.into(),
+                    // Errno::EMLINK => TooManyLinks.into(),
+                    // Errno::ENAMETOOLONG => InvalidFilename.into(),
+                    // Errno::ENETDOWN => NetworkDown.into(),
+                    // Errno::ENETUNREACH => NetworkUnreachable.into(),
+                    Errno::ENOTCONN => NotConnected.into(),
+                    // Errno::ENOTDIR => NotADirectory.into(),
+                    // Errno::ENOTEMPTY => DirectoryNotEmpty.into(),
+                    Errno::EPIPE => BrokenPipe.into(),
+                    // Errno::EROFS => ReadOnlyFilesystem.into(),
+                    // Errno::ESPIPE => NotSeekable.into(),
+                    // Errno::ESTALE => StaleNetworkFileHandle.into(),
+                    Errno::ETIMEDOUT => TimedOut.into(),
+                    // Errno::ETXTBSY => ExecutableFileBusy.into(),
+                    // Errno::EXDEV => CrossesDevices.into(),
+                    Errno::EACCES | Errno::EPERM => PermissionDenied.into(),
+
+                    // These two constants can have the same value on some systems,
+                    // but different values on others, so we can't use a match
+                    // clause
+                    x if x == Errno::EAGAIN || x == Errno::EWOULDBLOCK => WouldBlock.into(),
+
+                    x => ::no_std_io::io::Error::new(
+                        Uncategorized,
+                        x.description().unwrap_or("Unknown error"),
+                    ),
+                }
+            }
+        }
+
+        #[cfg(any(doc, feature = "core2-compat"))]
+        impl ::no_std_io::error::Error for Errno {}
+
         #[cfg(any(doc, feature = "iter"))]
         /// Iterator over all possible error numbers.
         pub struct ErrnoIter(::core::slice::Iter<'static, i32>);
