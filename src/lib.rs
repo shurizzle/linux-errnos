@@ -270,3 +270,58 @@ pub use x86_64::Errno;
     any(doc, feature = "iter")
 ))]
 pub use x86_64::ErrnoIter;
+
+#[cfg(all(
+    target_os = "linux",
+    any(
+        target_os = "arm",
+        target_os = "aarch64",
+        target_os = "hexagon",
+        target_os = "loongarch64",
+        target_os = "m68k",
+        target_os = "mips",
+        target_os = "mips64",
+        target_os = "powerpc",
+        target_os = "powerpc64",
+        target_os = "riscv32",
+        target_os = "riscv64",
+        target_os = "s390x",
+        target_os = "sparc",
+        target_os = "sparc64",
+        target_os = "x86",
+        target_os = "x86_64"
+    ),
+    feature = "libc-compat"
+))]
+#[link(name = "c")]
+extern "C" {
+    fn __errno_location() -> *mut i32;
+}
+#[cfg(all(
+    target_os = "linux",
+    any(
+        target_os = "arm",
+        target_os = "aarch64",
+        target_os = "hexagon",
+        target_os = "loongarch64",
+        target_os = "m68k",
+        target_os = "mips",
+        target_os = "mips64",
+        target_os = "powerpc",
+        target_os = "powerpc64",
+        target_os = "riscv32",
+        target_os = "riscv64",
+        target_os = "s390x",
+        target_os = "sparc",
+        target_os = "sparc64",
+        target_os = "x86",
+        target_os = "x86_64"
+    ),
+    feature = "libc-compat"
+))]
+impl Errno {
+    /// Returns a new `Errno` from last OS error.
+    pub fn last_os_error() -> Self {
+        Self(unsafe { *__errno_location() })
+    }
+}

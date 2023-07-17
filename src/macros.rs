@@ -53,16 +53,10 @@ macro_rules! def_errno {
             }
 
             /// Returns a new `Errno` from last OS error.
-            #[cfg(any(doc, all(feature = "std", not(feature = "libc"))))]
+            #[cfg(any(doc, all(feature = "std", not(feature = "libc-compat"))))]
             #[inline]
             pub fn last_os_error() -> Self {
                 Self::from_io_error(::std::io::Error::last_os_error()).unwrap()
-            }
-
-            /// Returns a new `Errno` from last OS error.
-            #[cfg(any(doc, feature = "libc"))]
-            pub fn last_os_error() -> Self {
-                Self(unsafe { *libc::__errno_location() })
             }
 
             /// Returns an iterator `ErrnoIter` over all the known error numbers.

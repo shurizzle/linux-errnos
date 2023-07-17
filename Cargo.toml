@@ -48,7 +48,7 @@ path = "src/lib.rs"
 default = ["std"]
 std = []
 iter = []
-libc-compat = ["libc"]
+libc-compat = []
 no_std_io-compat = ["no_std_io"]
 
 # architectures
@@ -120,5 +120,4 @@ all = [
 ]
 
 [dependencies]
-libc = { version = "0.2.144", optional = true }
 no_std_io = { version = "0.6.0", default-features = false, optional = true }

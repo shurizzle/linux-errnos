@@ -132,6 +132,9 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
         a.sort_by(|a, b| Ord::cmp(a.0.as_str(), b.0.as_str()));
         a
     };
+    let mut c_compat = "#[cfg(all(target_os = \"linux\", any("
+        .to_string()
+        .into_bytes();
     for (plat, bind) in archs {
         let archs = 'mapping: {
             for (p, archs) in MAPPING.iter().copied() {
@@ -228,9 +231,34 @@ pub use {}::ErrnoIter;",
                     arch,
                     Id(arch.as_ref())
                 );
+                if c_compat.last().map(|&c| c != b'(').unwrap() {
+                    _ = write!(c_compat, ", ");
+                }
+                _ = write!(c_compat, "target_os = {:?}", arch);
             }
         }
     }
+
+    c_compat.extend_from_slice("), feature = \"libc-compat\"))]\n".as_bytes());
+    _ = writeln!(rust_archs);
+    rust_archs.extend_from_slice(&c_compat);
+    _ = writeln!(
+        rust_archs,
+        "#[link(name = \"c\")]
+extern \"C\" {{
+    fn __errno_location() -> *mut i32;
+}}"
+    );
+    rust_archs.extend_from_slice(&c_compat);
+    _ = writeln!(
+        rust_archs,
+        "impl Errno {{
+    /// Returns a new `Errno` from last OS error.
+    pub fn last_os_error() -> Self {{
+        Self(unsafe {{ *__errno_location() }})
+    }}
+}}"
+    );
 
     {
         struct Platforms<'a>(&'a Cond, String);
