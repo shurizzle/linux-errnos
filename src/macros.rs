@@ -52,13 +52,6 @@ macro_rules! def_errno {
                 err.raw_os_error().map(Self)
             }
 
-            /// Returns a new `Errno` from last OS error.
-            #[cfg(any(doc, all(feature = "std", not(feature = "libc-compat"))))]
-            #[inline]
-            pub fn last_os_error() -> Self {
-                Self::from_io_error(::std::io::Error::last_os_error()).unwrap()
-            }
-
             /// Returns an iterator `ErrnoIter` over all the known error numbers.
             #[cfg(any(doc, feature = "iter"))]
             #[inline]
@@ -160,7 +153,7 @@ macro_rules! def_errno {
             }
         }
 
-        #[cfg(any(doc, feature = "core2-compat"))]
+        #[cfg(any(doc, feature = "no_std_io-compat"))]
         impl ::no_std_io::error::Error for Errno {}
 
         #[cfg(any(doc, feature = "iter"))]
