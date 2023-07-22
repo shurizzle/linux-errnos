@@ -3,7 +3,7 @@ exclude = ["errno-gen"]
 
 [package]
 name = "linux-errnos"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["shurizzle <shura1991@gmail.com>"]
 edition = "2018"
 license = "MIT"
