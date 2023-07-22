@@ -43,6 +43,7 @@ required-features = ["iter"]
 
 [lib]
 path = "src/lib.rs"
+doctest = false
 
 [features]
 default = ["std"]

@@ -191,7 +191,18 @@ impl fmt::Display for Lib {
         writeln!(f, "    pub fn last_os_error() -> Self {{")?;
         writeln!(f, "        Self(unsafe {{ *__errno_location() }})")?;
         writeln!(f, "    }}")?;
-        writeln!(f, "}}")
+        writeln!(f, "}}")?;
+
+        if let Some(cond) = cond.as_ref() {
+            writeln!(f)?;
+            writeln!(f, "#[cfg({})]", cond)?;
+            writeln!(f, "#[test]")?;
+            writeln!(f, "fn basic() {{")?;
+            writeln!(f, "    _ = Errno::EINVAL;")?;
+            writeln!(f, "}}")?;
+        }
+
+        Ok(())
     }
 }
 
