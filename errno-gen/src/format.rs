@@ -52,11 +52,8 @@ impl Formatter {
 
         drop(child.stdin.take());
         drop(child.stderr.take());
-        match child.stdout.take() {
-            Some(mut out) => {
-                out.read_to_string(buf)?;
-            }
-            _ => (),
+        if let Some(mut out) = child.stdout.take() {
+            out.read_to_string(buf)?;
         }
 
         let status = child.wait().wrap_err("Failed to format file")?;

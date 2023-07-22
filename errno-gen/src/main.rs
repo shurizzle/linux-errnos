@@ -1,38 +1,27 @@
+mod builder;
 mod format;
 mod generate;
 mod kernel_org;
 
 use std::{
-    collections::HashMap,
     fmt,
     fs::File,
-    io::{Read, Seek, SeekFrom, Write},
+    io::{Read, Seek, SeekFrom},
     path::{Path, PathBuf},
     rc::Rc,
 };
 
+use builder::LinuxModBuilder;
 use color_eyre::{
     eyre::{bail, Context},
     Result,
 };
-use generate::{generate_bindings, generic_bindings, Bindings, Id};
+use generate::{generate_bindings, generic_bindings};
 
-use crate::format::Formatter;
-
-const MAPPING: &[(&str, &[&str])] = [
-    ("x86", ["x86", "x86_64"].as_slice()),
-    ("arm", ["arm"].as_slice()),
-    ("arm64", ["aarch64"].as_slice()),
-    ("hexagon", ["hexagon"].as_slice()),
-    ("s390", ["s390x"].as_slice()),
-    ("powerpc", ["powerpc", "powerpc64"].as_slice()),
-    ("mips", ["mips", "mips64"].as_slice()),
-    ("m68k", ["m68k"].as_slice()),
-    ("riscv", ["riscv32", "riscv64"].as_slice()),
-    ("sparc", ["sparc", "sparc64"].as_slice()),
-    ("loongarch", ["loongarch64"].as_slice()),
-]
-.as_slice();
+use crate::{
+    builder::{Lib, Platform},
+    format::Formatter,
+};
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -64,9 +53,98 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
 
     kernel_org::download_latest(srcdir)?;
 
+    let mut builder = generate_linux_modules(srcdir, outdir, &formatter)?;
+    let mut features = Vec::new();
+
+    for m in &mut builder {
+        let name = m.name();
+        if let Err(pos) = features.binary_search(&name) {
+            features.insert(pos, name);
+        }
+    }
+
+    for p in Platform::iter() {
+        let arch = Rc::from(p.rust_arch());
+        if let Err(pos) = features.binary_search(&arch) {
+            features.insert(pos, arch);
+        }
+
+        let mut arch = if let Some(a) = builder.get(p.linux_arch()) {
+            a
+        } else {
+            bail!("Arch {} not found.", p.linux_arch())
+        };
+
+        p.add_to_cfg(&mut arch);
+    }
+
+    let linux_mod = builder.build();
+
+    {
+        let mut path = outdir.to_path_buf();
+        path.push("src");
+        path.push("linux");
+        path.push("mod.rs");
+
+        write_if_ne(
+            path,
+            "Error numbers contained in linux/arch/*.",
+            &formatter,
+            linux_mod,
+        )?;
+    }
+
+    {
+        let mut path = outdir.to_path_buf();
+        path.push("src");
+        path.push("lib.rs");
+
+        write_if_ne(
+            path,
+            "Error numbers for every arch supported by linux.",
+            &formatter,
+            Lib,
+        )?;
+    }
+
+    for f in features.iter() {
+        println!("{} = []", f);
+    }
+    println!("all = [");
+    for f in features.iter().map(Rc::as_ref) {
+        println!("  {:?},", f);
+    }
+    println!("]");
+
+    Ok(())
+}
+
+fn generate_linux_modules<P1: AsRef<Path>, P2: AsRef<Path>>(
+    srcdir: P1,
+    outdir: P2,
+    formatter: &Formatter,
+) -> Result<LinuxModBuilder> {
+    let srcdir = srcdir.as_ref();
+
+    let outdir = {
+        let mut path = PathBuf::from(outdir.as_ref());
+        path.push("src");
+        path.push("linux");
+
+        std::fs::create_dir_all(&path).wrap_err("Failed to write results")?;
+
+        path
+    };
+
     let generic = generic_bindings(srcdir)?;
 
-    let mut archs = HashMap::new();
+    {
+        let mut outfile = outdir.clone();
+        outfile.push("generic.rs");
+        write_if_ne(outfile, "Generic error numbers", formatter, &generic)?;
+    }
+    let mut builder = LinuxModBuilder::new();
+
     let mut archdir = PathBuf::from(srcdir);
     archdir.push("arch");
     for entry in std::fs::read_dir(archdir).wrap_err("Failed to generate bindings")? {
@@ -93,236 +171,52 @@ fn real_main<P1: AsRef<Path>, P2: AsRef<Path>>(srcdir: P1, outdir: P2) -> Result
         let bindings = generate_bindings(srcdir, &arch)?;
 
         if bindings == generic {
-            archs.insert(arch, B::Generic);
+            builder.add_generic(Rc::from(arch));
         } else {
-            archs.insert(arch, B::Arch(bindings));
+            let mut outfile = outdir.clone();
+            outfile.push(format!("{}.rs", arch));
+            write_if_ne(
+                outfile,
+                format!("Error numbers for arch `{}`", arch),
+                formatter,
+                bindings,
+            )?;
+            builder.add_original(Rc::from(arch));
         }
     }
 
-    let outdir = {
-        let mut path = PathBuf::from(outdir);
-        path.push("src");
-        let mut p = path.clone();
-        p.push("linux");
-
-        std::fs::create_dir_all(p).wrap_err("Failed to write results")?;
-
-        path
-    };
-
-    let mut generic_cond = Cond::default();
-    let mut platforms = Vec::new();
-    let mut features = vec![];
-    {
-        let generic = Rc::new("generic".to_string().into_boxed_str());
-        generic_cond.platforms.push(generic.clone());
-        features.push(generic);
-    }
-    let mut rust_archs = Vec::new();
-    rust_archs.extend_from_slice(
-        "#![cfg_attr(all(not(doc), not(feature = \"std\")), no_std)]\n".as_bytes(),
-    );
-    rust_archs.extend_from_slice(
-        "#![cfg_attr(doc, feature(doc_cfg, doc_auto_cfg, doc_cfg_hide))]\n".as_bytes(),
-    );
-    rust_archs.extend_from_slice("#![cfg_attr(doc, doc(cfg_hide(doc)))]\n".as_bytes());
-    rust_archs.extend_from_slice("pub(crate) mod macros;\npub mod linux;\n\n".as_bytes());
-    let archs = {
-        let mut a = archs.into_iter().collect::<Vec<_>>();
-        a.sort_by(|a, b| Ord::cmp(a.0.as_str(), b.0.as_str()));
-        a
-    };
-    let mut c_compat = "#[cfg(all(target_os = \"linux\", any("
-        .to_string()
-        .into_bytes();
-    for (plat, bind) in archs {
-        let archs = 'mapping: {
-            for (p, archs) in MAPPING.iter().copied() {
-                if p == plat {
-                    if archs.is_empty() {
-                        break 'mapping None;
-                    } else {
-                        break 'mapping Some(
-                            archs
-                                .iter()
-                                .copied()
-                                .map(|x| Rc::new(x.to_string().into_boxed_str()))
-                                .collect::<Vec<Rc<Box<str>>>>(),
-                        );
-                    }
-                }
-            }
-            None
-        };
-        let plat = Rc::new(plat.into_boxed_str());
+    for entry in std::fs::read_dir(&outdir).wrap_err("Failed to generate bindings")? {
+        let entry = entry.wrap_err("Failed to generate bindings")?;
 
         {
-            let mut cond = Cond::default();
-            cond.platforms.push(plat.clone());
-            features.push(plat.clone());
-            if let Some(archs) = archs.as_ref() {
-                cond.archs.extend_from_slice(archs.as_slice());
-                features.extend_from_slice(archs.as_slice());
+            let md = entry.metadata().wrap_err("Failed to generate bindings")?;
+            if !md.is_dir() || md.is_symlink() {
+                continue;
             }
+        }
 
-            match bind {
-                B::Generic => {
-                    generic_cond.platforms.push(plat.clone());
-                    if let Some(archs) = archs.as_ref() {
-                        generic_cond.archs.extend_from_slice(archs.as_slice());
+        let path = entry.path();
+
+        if let Some(name) = path.file_name() {
+            if let Some(name) = name.to_str() {
+                if name == "mod.rs" {
+                    continue;
+                }
+
+                if let Some(name) = name.strip_suffix(".rs") {
+                    if builder.contains(name) {
+                        continue;
                     }
-
-                    _ = writeln!(
-                        platforms,
-                        "{}pub mod {} {{
-    //! Error number for arch `{}`.
-    pub use super::generic::Errno;
-    #[cfg(any(doc, feature = \"iter\"))]
-    pub use super::generic::ErrnoIter;
-}}",
-                        cond,
-                        Id(plat.as_ref()),
-                        plat.as_ref(),
-                    );
-                }
-                B::Arch(bind) => {
-                    {
-                        let mut outfile = outdir.clone();
-                        outfile.push("linux");
-                        outfile.push(format!("{}.rs", plat));
-                        write_if_ne(
-                            outfile,
-                            format!("Error numbers for arch `{}`", plat),
-                            &formatter,
-                            bind,
-                        )?;
-                    }
-                    _ = writeln!(platforms, "{cond}pub mod {};", Id(plat.as_ref()));
                 }
             }
+        } else {
+            continue;
         }
 
-        if let Some(archs) = archs {
-            for arch in archs {
-                let mut cond = Cond::default();
-                cond.archs.push(arch.clone());
-                _ = writeln!(
-                    rust_archs,
-                    "{}pub mod {} {{
-    //! Error numbers for arch `{}`.
-    pub use super::linux::{}::Errno;
-    #[cfg(any(doc, feature = \"iter\"))]
-    pub use super::linux::{}::ErrnoIter;
-}}",
-                    cond,
-                    Id(arch.as_ref()),
-                    arch.as_ref(),
-                    Id(plat.as_ref()),
-                    Id(plat.as_ref()),
-                );
-                _ = writeln!(
-                    rust_archs,
-                    "#[cfg(all(target_os = \"linux\", target_arch = {:?}))]
-pub use {}::Errno;
-#[cfg(all(target_os = \"linux\", target_arch = {:?}, any(doc, feature = \"iter\")))]
-pub use {}::ErrnoIter;",
-                    arch,
-                    Id(arch.as_ref()),
-                    arch,
-                    Id(arch.as_ref())
-                );
-                if c_compat.last().map(|&c| c != b'(').unwrap() {
-                    _ = write!(c_compat, ", ");
-                }
-                _ = write!(c_compat, "target_os = {:?}", arch);
-            }
-        }
+        std::fs::remove_file(path).wrap_err("Failed to clean output directories")?;
     }
 
-    c_compat.extend_from_slice("), feature = \"libc-compat\"))]\n".as_bytes());
-    _ = writeln!(rust_archs);
-    rust_archs.extend_from_slice(&c_compat);
-    _ = writeln!(
-        rust_archs,
-        "#[link(name = \"c\")]
-extern \"C\" {{
-    fn __errno_location() -> *mut i32;
-}}"
-    );
-    rust_archs.extend_from_slice(&c_compat);
-    _ = writeln!(
-        rust_archs,
-        "impl Errno {{
-    /// Returns a new `Errno` from last OS error.
-    #[inline]
-    pub fn last_os_error() -> Self {{
-        Self(unsafe {{ *__errno_location() }})
-    }}
-}}"
-    );
-
-    {
-        struct Platforms<'a>(&'a Cond, String);
-        impl<'a> fmt::Display for Platforms<'a> {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(f, "{}pub mod generic;\n\n{}", self.0, self.1)
-            }
-        }
-
-        let mut path = outdir.clone();
-        path.push("linux");
-        path.push("mod.rs");
-        write_if_ne(
-            path,
-            "Error numbers contained in linux/arch/*",
-            &formatter,
-            Platforms(&generic_cond, unsafe {
-                String::from_utf8_unchecked(platforms)
-            }),
-        )?;
-    }
-
-    {
-        let mut outfile = outdir.clone();
-        outfile.push("linux");
-        outfile.push("generic.rs");
-        write_if_ne(outfile, "Generic error numbers", &formatter, generic)?;
-    }
-
-    {
-        let mut path = outdir;
-        path.push("lib.rs");
-        write_if_ne(
-            path,
-            "Error numbers for every arch supported by linux",
-            &formatter,
-            unsafe { String::from_utf8_unchecked(rust_archs) },
-        )?;
-    }
-
-    {
-        features.sort();
-        features.dedup();
-        for feat in features.iter() {
-            println!("{} = []", feat);
-        }
-        print!("all = [");
-        for (i, feat) in features.into_iter().enumerate() {
-            if i != 0 {
-                print!(", ");
-            }
-            print!("{:?}", Rc::as_ref(&feat).as_ref());
-        }
-        println!("]");
-    }
-
-    Ok(())
-}
-
-#[derive(Debug)]
-enum B {
-    Generic,
-    Arch(Bindings),
+    Ok(builder)
 }
 
 fn write_if_ne<P, B, S>(path: P, desc: S, formatter: &Formatter, content: B) -> Result<()>
@@ -365,62 +259,4 @@ pub fn slurp<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<u8>> {
     }
 
     Ok(buf)
-}
-
-#[derive(Debug, Default)]
-struct Cond {
-    platforms: Vec<Rc<Box<str>>>,
-    archs: Vec<Rc<Box<str>>>,
-}
-
-impl fmt::Display for Cond {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut archs = self.archs.clone();
-        archs.sort();
-        archs.dedup();
-        let mut plats = self.platforms.clone();
-        plats.extend_from_slice(archs.as_slice());
-        plats.sort();
-        plats.dedup();
-
-        if plats.is_empty() {
-            return Ok(());
-        }
-
-        write!(f, "#[cfg(any(doc, ")?; // open 1
-
-        if plats.len() > 1 && self.archs.is_empty() {
-            write!(f, "any(")?; // open 3
-        }
-        for (i, plat) in plats.iter().enumerate() {
-            if i != 0 {
-                write!(f, ", ")?;
-            }
-            write!(f, "feature = {:?}", Rc::as_ref(plat).as_ref())?;
-        }
-        if plats.len() > 1 && self.archs.is_empty() {
-            write!(f, ")")?; // close 3
-        }
-
-        if !self.archs.is_empty() {
-            write!(f, ", all(target_os = \"linux\", ")?; // open 4
-
-            if archs.len() > 1 {
-                write!(f, "any(")?; // open 5
-            }
-            for (i, arch) in archs.iter().enumerate() {
-                if i != 0 {
-                    write!(f, ", ")?;
-                }
-                write!(f, "target_arch = {:?}", Rc::as_ref(arch).as_ref())?;
-            }
-            if archs.len() > 1 {
-                write!(f, ")")?; // close 5
-            }
-
-            write!(f, ")")?; // close 4
-        }
-
-        writeln!(f, "))]") // close 1
-    }
 }

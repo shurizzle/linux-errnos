@@ -1,7 +1,26 @@
-//! Error numbers contained in linux/arch/*.
+//! Error numbers contained in linux/arch/*..
 
 #[cfg(any(
-    doc,
+    all(
+        any(target_os = "linux", target_os = "android"),
+        any(
+            target_arch = "x86",
+            target_arch = "x86_64",
+            target_arch = "arm",
+            target_arch = "aarch64"
+        )
+    ),
+    all(
+        any(
+            target_arch = "hexagon",
+            target_arch = "s390x",
+            target_arch = "m68k",
+            target_arch = "riscv32",
+            target_arch = "riscv64",
+            target_arch = "loongarch64"
+        ),
+        target_os = "linux"
+    ),
     feature = "aarch64",
     feature = "arc",
     feature = "arm",
@@ -26,203 +45,220 @@
     feature = "x86",
     feature = "x86_64",
     feature = "xtensa",
-    all(
-        target_os = "linux",
-        any(
-            target_arch = "aarch64",
-            target_arch = "arm",
-            target_arch = "hexagon",
-            target_arch = "loongarch64",
-            target_arch = "m68k",
-            target_arch = "riscv32",
-            target_arch = "riscv64",
-            target_arch = "s390x",
-            target_arch = "x86",
-            target_arch = "x86_64"
-        )
-    )
+    doc
 ))]
 pub mod generic;
 
-#[cfg(any(doc, feature = "alpha"))]
+#[cfg(any(feature = "alpha", doc))]
 pub mod alpha;
-#[cfg(any(doc, feature = "arc"))]
+
+#[cfg(any(feature = "arc", doc))]
 pub mod arc {
-    //! Error number for arch `arc`.
+    //! Error numbers for arch `arc`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
-#[cfg(any(doc, feature = "arm", all(target_os = "linux", target_arch = "arm")))]
-pub mod arm {
-    //! Error number for arch `arm`.
-    pub use super::generic::Errno;
-    #[cfg(any(doc, feature = "iter"))]
-    pub use super::generic::ErrnoIter;
-}
+
 #[cfg(any(
-    doc,
+    all(any(target_os = "linux", target_os = "android"), target_arch = "arm"),
+    feature = "arm",
+    doc
+))]
+pub mod arm {
+    //! Error numbers for arch `arm`.
+    pub use super::generic::Errno;
+    #[cfg(any(doc, feature = "iter"))]
+    pub use super::generic::ErrnoIter;
+}
+
+#[cfg(any(
+    all(
+        any(target_os = "linux", target_os = "android"),
+        target_arch = "aarch64"
+    ),
     feature = "aarch64",
     feature = "arm64",
-    all(target_os = "linux", target_arch = "aarch64")
+    doc
 ))]
 pub mod arm64 {
-    //! Error number for arch `arm64`.
+    //! Error numbers for arch `arm64`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
-#[cfg(any(doc, feature = "csky"))]
+
+#[cfg(any(feature = "csky", doc))]
 pub mod csky {
-    //! Error number for arch `csky`.
+    //! Error numbers for arch `csky`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
+
 #[cfg(any(
-    doc,
+    all(target_os = "linux", target_arch = "hexagon"),
     feature = "hexagon",
-    all(target_os = "linux", target_arch = "hexagon")
+    doc
 ))]
 pub mod hexagon {
-    //! Error number for arch `hexagon`.
+    //! Error numbers for arch `hexagon`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
-#[cfg(any(doc, feature = "ia64"))]
+
+#[cfg(any(feature = "ia64", doc))]
 pub mod ia64 {
-    //! Error number for arch `ia64`.
+    //! Error numbers for arch `ia64`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
+
 #[cfg(any(
-    doc,
+    all(target_os = "linux", target_arch = "loongarch64"),
     feature = "loongarch",
     feature = "loongarch64",
-    all(target_os = "linux", target_arch = "loongarch64")
+    doc
 ))]
 pub mod loongarch {
-    //! Error number for arch `loongarch`.
+    //! Error numbers for arch `loongarch`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
-#[cfg(any(doc, feature = "m68k", all(target_os = "linux", target_arch = "m68k")))]
+
+#[cfg(any(all(target_os = "linux", target_arch = "m68k"), feature = "m68k", doc))]
 pub mod m68k {
-    //! Error number for arch `m68k`.
+    //! Error numbers for arch `m68k`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
-#[cfg(any(doc, feature = "microblaze"))]
+
+#[cfg(any(feature = "microblaze", doc))]
 pub mod microblaze {
-    //! Error number for arch `microblaze`.
+    //! Error numbers for arch `microblaze`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
+
 #[cfg(any(
-    doc,
+    all(any(target_arch = "mips", target_arch = "mips64"), target_os = "linux"),
     feature = "mips",
     feature = "mips64",
-    all(target_os = "linux", any(target_arch = "mips", target_arch = "mips64"))
+    doc
 ))]
 pub mod mips;
-#[cfg(any(doc, feature = "nios2"))]
+
+#[cfg(any(feature = "nios2", doc))]
 pub mod nios2 {
-    //! Error number for arch `nios2`.
+    //! Error numbers for arch `nios2`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
-#[cfg(any(doc, feature = "openrisc"))]
+
+#[cfg(any(feature = "openrisc", doc))]
 pub mod openrisc {
-    //! Error number for arch `openrisc`.
+    //! Error numbers for arch `openrisc`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
-#[cfg(any(doc, feature = "parisc"))]
+
+#[cfg(any(feature = "parisc", doc))]
 pub mod parisc;
+
 #[cfg(any(
-    doc,
+    all(
+        any(target_arch = "powerpc", target_arch = "powerpc64"),
+        target_os = "linux"
+    ),
     feature = "powerpc",
     feature = "powerpc64",
-    all(
-        target_os = "linux",
-        any(target_arch = "powerpc", target_arch = "powerpc64")
-    )
+    doc
 ))]
 pub mod powerpc;
+
 #[cfg(any(
-    doc,
+    all(
+        any(target_arch = "riscv32", target_arch = "riscv64"),
+        target_os = "linux"
+    ),
     feature = "riscv",
     feature = "riscv32",
     feature = "riscv64",
-    all(
-        target_os = "linux",
-        any(target_arch = "riscv32", target_arch = "riscv64")
-    )
+    doc
 ))]
 pub mod riscv {
-    //! Error number for arch `riscv`.
+    //! Error numbers for arch `riscv`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
+
 #[cfg(any(
-    doc,
+    all(target_os = "linux", target_arch = "s390x"),
     feature = "s390",
     feature = "s390x",
-    all(target_os = "linux", target_arch = "s390x")
+    doc
 ))]
 pub mod s390 {
-    //! Error number for arch `s390`.
+    //! Error numbers for arch `s390`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
-#[cfg(any(doc, feature = "sh"))]
+
+#[cfg(any(feature = "sh", doc))]
 pub mod sh {
-    //! Error number for arch `sh`.
+    //! Error numbers for arch `sh`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
+
 #[cfg(any(
-    doc,
+    all(
+        any(target_arch = "sparc", target_arch = "sparc64"),
+        target_os = "linux"
+    ),
     feature = "sparc",
     feature = "sparc64",
-    all(
-        target_os = "linux",
-        any(target_arch = "sparc", target_arch = "sparc64")
-    )
+    doc
 ))]
 pub mod sparc;
-#[cfg(any(doc, feature = "um"))]
+
+#[cfg(any(feature = "um", doc))]
 pub mod um {
-    //! Error number for arch `um`.
+    //! Error numbers for arch `um`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
+
 #[cfg(any(
-    doc,
+    all(
+        any(target_os = "linux", target_os = "android"),
+        any(target_arch = "x86", target_arch = "x86_64")
+    ),
     feature = "x86",
     feature = "x86_64",
-    all(target_os = "linux", any(target_arch = "x86", target_arch = "x86_64"))
+    doc
 ))]
 pub mod x86 {
-    //! Error number for arch `x86`.
+    //! Error numbers for arch `x86`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
 }
-#[cfg(any(doc, feature = "xtensa"))]
+
+#[cfg(any(feature = "xtensa", doc))]
 pub mod xtensa {
-    //! Error number for arch `xtensa`.
+    //! Error numbers for arch `xtensa`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
