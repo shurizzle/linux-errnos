@@ -1,6 +1,6 @@
-extern crate linux_errno;
+extern crate linux_errnos;
 
-use linux_errno::*;
+use linux_errnos::*;
 
 pub fn main() {
     for errno in Errno::iter() {
