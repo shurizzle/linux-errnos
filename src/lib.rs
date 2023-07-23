@@ -343,7 +343,7 @@ pub use loongarch64::ErrnoIter;
             target_os = "linux"
         )
     ),
-    any(feature = "libc-compat", test)
+    any(feature = "libc-compat", doc)
 ))]
 #[link(name = "c")]
 extern "C" {
@@ -381,7 +381,7 @@ extern "C" {
             target_os = "linux"
         )
     ),
-    any(feature = "libc-compat", test)
+    any(feature = "libc-compat", doc)
 ))]
 impl Errno {
     /// Returns a new `Errno` from last OS error.
@@ -420,6 +420,9 @@ impl Errno {
 ))]
 #[test]
 fn basic() {
-    let _ = Errno::last_os_error();
-    let _ = Errno::EINVAL;
+    #[cfg(features = "libc-compat")]
+    {
+        _ = Errno::last_os_error();
+    }
+    _ = Errno::EINVAL;
 }

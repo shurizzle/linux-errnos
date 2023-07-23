@@ -24,6 +24,12 @@ cargo_test() {
   "${SCRIPTPATH}/docker-run.sh" "$1" "$3" \
     cargo test -vvv \
     --target "$2" \
+    --no-default-features \
+    --release
+  "${SCRIPTPATH}/docker-run.sh" "$1" "$3" \
+    cargo test -vvv \
+    --target "$2" \
+    --all-features \
     --release
 }
 

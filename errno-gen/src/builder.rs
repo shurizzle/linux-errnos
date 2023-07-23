@@ -172,14 +172,10 @@ impl fmt::Display for Lib {
         }
 
         let test_cond = cond.build();
-        let cond = if let Some(cond) = test_cond.as_ref() {
-            Some(
-                cond.clone()
-                    .and(Condition::feature(Rc::from("libc-compat")).or(Condition::test())),
-            )
-        } else {
-            None
-        };
+        let cond = test_cond.as_ref().map(|cond| {
+            cond.clone()
+                .and(Condition::feature(Rc::from("libc-compat")).or(Condition::doc()))
+        });
 
         writeln!(f)?;
         if let Some(cond) = cond.as_ref() {
@@ -214,7 +210,10 @@ impl fmt::Display for Lib {
             writeln!(f, "#[cfg({})]", cond)?;
             writeln!(f, "#[test]")?;
             writeln!(f, "fn basic() {{")?;
-            writeln!(f, "    _ = Errno::last_os_error();")?;
+            writeln!(f, "    #[cfg(features = \"libc-compat\")]")?;
+            writeln!(f, "    {{")?;
+            writeln!(f, "        _ = Errno::last_os_error();")?;
+            writeln!(f, "    }}")?;
             writeln!(f, "    _ = Errno::EINVAL;")?;
             writeln!(f, "}}")?;
         }
@@ -588,7 +587,6 @@ enum ConditionRepr {
     TargetArch(Arch),
     Feature(Rc<str>),
     Doc,
-    Test,
 }
 
 impl fmt::Display for ConditionRepr {
@@ -610,7 +608,6 @@ impl fmt::Display for ConditionRepr {
             Self::TargetArch(arch) => return write!(f, "target_arch = {}", arch),
             Self::Feature(name) => return write!(f, "feature = {:?}", Rc::as_ref(name)),
             Self::Doc => return write!(f, "doc"),
-            Self::Test => return write!(f, "test"),
         };
 
         let mut it = v.iter();
@@ -695,10 +692,6 @@ pub struct Condition(ConditionRepr);
 impl Condition {
     pub fn doc() -> Self {
         Self(ConditionRepr::Doc)
-    }
-
-    pub fn test() -> Self {
-        Self(ConditionRepr::Test)
     }
 
     pub fn target_os(os: Os) -> Self {
