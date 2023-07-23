@@ -212,9 +212,9 @@ impl fmt::Display for Lib {
             writeln!(f, "fn basic() {{")?;
             writeln!(f, "    #[cfg(feature = \"libc-compat\")]")?;
             writeln!(f, "    {{")?;
-            writeln!(f, "        _ = Errno::last_os_error();")?;
+            writeln!(f, "        let _ = Errno::last_os_error();")?;
             writeln!(f, "    }}")?;
-            writeln!(f, "    _ = Errno::EINVAL;")?;
+            writeln!(f, "    let _ = Errno::EINVAL;")?;
             writeln!(f, "}}")?;
         }
 

@@ -422,7 +422,7 @@ impl Errno {
 fn basic() {
     #[cfg(feature = "libc-compat")]
     {
-        _ = Errno::last_os_error();
+        let _ = Errno::last_os_error();
     }
-    _ = Errno::EINVAL;
+    let _ = Errno::EINVAL;
 }
