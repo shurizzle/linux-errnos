@@ -420,6 +420,6 @@ impl Errno {
 ))]
 #[test]
 fn basic() {
-    _ = Errno::last_os_error();
-    _ = Errno::EINVAL;
+    let _ = Errno::last_os_error();
+    let _ = Errno::EINVAL;
 }
