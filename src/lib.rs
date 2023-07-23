@@ -420,7 +420,7 @@ impl Errno {
 ))]
 #[test]
 fn basic() {
-    #[cfg(features = "libc-compat")]
+    #[cfg(feature = "libc-compat")]
     {
         _ = Errno::last_os_error();
     }

@@ -210,7 +210,7 @@ impl fmt::Display for Lib {
             writeln!(f, "#[cfg({})]", cond)?;
             writeln!(f, "#[test]")?;
             writeln!(f, "fn basic() {{")?;
-            writeln!(f, "    #[cfg(features = \"libc-compat\")]")?;
+            writeln!(f, "    #[cfg(feature = \"libc-compat\")]")?;
             writeln!(f, "    {{")?;
             writeln!(f, "        _ = Errno::last_os_error();")?;
             writeln!(f, "    }}")?;
