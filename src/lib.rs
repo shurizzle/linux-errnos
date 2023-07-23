@@ -314,37 +314,80 @@ pub use loongarch64::Errno;
 ))]
 pub use loongarch64::ErrnoIter;
 
-#[cfg(any(
-    all(
-        any(target_os = "linux", target_os = "android"),
-        any(
-            target_arch = "x86",
-            target_arch = "x86_64",
-            target_arch = "arm",
-            target_arch = "aarch64"
+#[cfg(all(
+    any(
+        all(
+            any(target_os = "linux", target_os = "android"),
+            any(
+                target_arch = "x86",
+                target_arch = "x86_64",
+                target_arch = "arm",
+                target_arch = "aarch64"
+            )
+        ),
+        all(
+            any(
+                target_arch = "hexagon",
+                target_arch = "s390x",
+                target_arch = "powerpc",
+                target_arch = "powerpc64",
+                target_arch = "mips",
+                target_arch = "mips64",
+                target_arch = "m68k",
+                target_arch = "riscv32",
+                target_arch = "riscv64",
+                target_arch = "sparc",
+                target_arch = "sparc64",
+                target_arch = "loongarch64"
+            ),
+            target_os = "linux"
         )
     ),
-    all(
-        any(
-            target_arch = "hexagon",
-            target_arch = "s390x",
-            target_arch = "powerpc",
-            target_arch = "powerpc64",
-            target_arch = "mips",
-            target_arch = "mips64",
-            target_arch = "m68k",
-            target_arch = "riscv32",
-            target_arch = "riscv64",
-            target_arch = "sparc",
-            target_arch = "sparc64",
-            target_arch = "loongarch64"
-        ),
-        target_os = "linux"
-    )
+    any(feature = "libc-compat", test)
 ))]
 #[link(name = "c")]
 extern "C" {
-    fn __errno_location() -> *mut i32;
+    #[cfg_attr(target_os = "linux", link_name = "__errno_location")]
+    #[cfg_attr(target_os = "android", link_name = "__errno")]
+    fn errno() -> *mut i32;
+}
+
+#[cfg(all(
+    any(
+        all(
+            any(target_os = "linux", target_os = "android"),
+            any(
+                target_arch = "x86",
+                target_arch = "x86_64",
+                target_arch = "arm",
+                target_arch = "aarch64"
+            )
+        ),
+        all(
+            any(
+                target_arch = "hexagon",
+                target_arch = "s390x",
+                target_arch = "powerpc",
+                target_arch = "powerpc64",
+                target_arch = "mips",
+                target_arch = "mips64",
+                target_arch = "m68k",
+                target_arch = "riscv32",
+                target_arch = "riscv64",
+                target_arch = "sparc",
+                target_arch = "sparc64",
+                target_arch = "loongarch64"
+            ),
+            target_os = "linux"
+        )
+    ),
+    any(feature = "libc-compat", test)
+))]
+impl Errno {
+    /// Returns a new `Errno` from last OS error.
+    pub fn last_os_error() -> Self {
+        Self(unsafe { *errno() })
+    }
 }
 
 #[cfg(any(
@@ -375,9 +418,8 @@ extern "C" {
         target_os = "linux"
     )
 ))]
-impl Errno {
-    /// Returns a new `Errno` from last OS error.
-    pub fn last_os_error() -> Self {
-        Self(unsafe { *__errno_location() })
-    }
+#[test]
+fn basic() {
+    _ = Errno::last_os_error();
+    _ = Errno::EINVAL;
 }

@@ -171,7 +171,15 @@ impl fmt::Display for Lib {
             fmt::Display::fmt(&p, f)?;
         }
 
-        let cond = cond.build();
+        let test_cond = cond.build();
+        let cond = if let Some(cond) = test_cond.as_ref() {
+            Some(
+                cond.clone()
+                    .and(Condition::feature(Rc::from("libc-compat")).or(Condition::test())),
+            )
+        } else {
+            None
+        };
 
         writeln!(f)?;
         if let Some(cond) = cond.as_ref() {
@@ -179,7 +187,15 @@ impl fmt::Display for Lib {
         }
         writeln!(f, "#[link(name = \"c\")]")?;
         writeln!(f, "extern \"C\" {{")?;
-        writeln!(f, "    fn __errno_location() -> *mut i32;")?;
+        writeln!(
+            f,
+            "    #[cfg_attr(target_os = \"linux\", link_name = \"__errno_location\")]"
+        )?;
+        writeln!(
+            f,
+            "    #[cfg_attr(target_os = \"android\", link_name = \"__errno\")]"
+        )?;
+        writeln!(f, "    fn errno() -> *mut i32;")?;
         writeln!(f, "}}")?;
 
         writeln!(f)?;
@@ -189,15 +205,16 @@ impl fmt::Display for Lib {
         writeln!(f, "impl Errno {{")?;
         writeln!(f, "    /// Returns a new `Errno` from last OS error.")?;
         writeln!(f, "    pub fn last_os_error() -> Self {{")?;
-        writeln!(f, "        Self(unsafe {{ *__errno_location() }})")?;
+        writeln!(f, "        Self(unsafe {{ *errno() }})")?;
         writeln!(f, "    }}")?;
         writeln!(f, "}}")?;
 
-        if let Some(cond) = cond.as_ref() {
+        if let Some(cond) = test_cond.as_ref() {
             writeln!(f)?;
             writeln!(f, "#[cfg({})]", cond)?;
             writeln!(f, "#[test]")?;
             writeln!(f, "fn basic() {{")?;
+            writeln!(f, "    _ = Errno::last_os_error();")?;
             writeln!(f, "    _ = Errno::EINVAL;")?;
             writeln!(f, "}}")?;
         }
@@ -571,6 +588,7 @@ enum ConditionRepr {
     TargetArch(Arch),
     Feature(Rc<str>),
     Doc,
+    Test,
 }
 
 impl fmt::Display for ConditionRepr {
@@ -592,6 +610,7 @@ impl fmt::Display for ConditionRepr {
             Self::TargetArch(arch) => return write!(f, "target_arch = {}", arch),
             Self::Feature(name) => return write!(f, "feature = {:?}", Rc::as_ref(name)),
             Self::Doc => return write!(f, "doc"),
+            Self::Test => return write!(f, "test"),
         };
 
         let mut it = v.iter();
@@ -676,6 +695,10 @@ pub struct Condition(ConditionRepr);
 impl Condition {
     pub fn doc() -> Self {
         Self(ConditionRepr::Doc)
+    }
+
+    pub fn test() -> Self {
+        Self(ConditionRepr::Test)
     }
 
     pub fn target_os(os: Os) -> Self {
