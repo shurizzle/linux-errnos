@@ -15,6 +15,7 @@ If `target_arch` is supported a module's top-level `Errno` and `ErrnoIter` (if
 - `std`: enable std support (dealing with std::io::Error).
 - `iter`: enable `Errno::iter()` function.
 - `libc-compat`: enable `libc` compatibility (global errno).
+- `no_std_io-compat`: enable `no_std_io` crate compatibility.
 - `all`: enable all the architectures.
 
 #### Other flags
