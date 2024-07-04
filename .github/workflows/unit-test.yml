@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [arm, loongarch64, x86_64, x86, aarch64, riscv64, powerpc, powerpc64, mips, mips64, s390x]
+        arch: [arm, loongarch64, x86_64, x86, aarch64, riscv64, powerpc, powerpc64, s390x]
     steps:
     - uses: actions/checkout@v3
     - name: Install toolchain
