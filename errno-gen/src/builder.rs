@@ -225,7 +225,7 @@ impl fmt::Display for Lib {
 pub struct PlatformIterator(core::iter::Copied<core::slice::Iter<'static, Platform>>);
 
 impl PlatformIterator {
-    const ALL: &[Platform] = [
+    const ALL: &'static [Platform] = [
         Platform::X86,
         Platform::X86_64,
         Platform::Arm,
@@ -820,7 +820,7 @@ impl PlatformBuilder {
 
 impl CfgBuild for PlatformBuilder {
     fn add_platform(&mut self, os: Os, cond: Condition) {
-        let conds = self.0.entry(os).or_insert(Vec::new());
+        let conds = self.0.entry(os).or_default();
         if let Err(pos) = conds.binary_search(&cond) {
             conds.insert(pos, cond);
         }
