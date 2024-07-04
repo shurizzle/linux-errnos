@@ -195,8 +195,6 @@ impl Errno {
     pub const EKEYREVOKED: Self = Self(186);
     /// Key was rejected by service
     pub const EKEYREJECTED: Self = Self(187);
-    /// symbol does not exist in executable
-    pub const ENOSYM: Self = Self(215);
     /// Socket operation on non-socket
     pub const ENOTSOCK: Self = Self(216);
     /// Destination address required
@@ -245,8 +243,6 @@ impl Errno {
     pub const ETIMEDOUT: Self = Self(238);
     /// Connection refused
     pub const ECONNREFUSED: Self = Self(239);
-    /// Remote peer released connection
-    pub const EREMOTERELEASE: Self = Self(240);
     /// Host is down
     pub const EHOSTDOWN: Self = Self(241);
     /// No route to host
@@ -324,15 +320,15 @@ impl Errno {
     pub const MAX: i32 = 531;
 
     #[cfg(feature = "iter")]
-    const ALL: [i32; 152] = [
+    const ALL: [i32; 150] = [
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
         26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 50,
         51, 52, 53, 54, 55, 57, 58, 59, 60, 61, 64, 66, 67, 68, 69, 70, 71, 72, 160, 161, 162, 163,
         164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181,
-        182, 183, 184, 185, 186, 187, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226,
-        227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 244, 245,
-        247, 248, 249, 251, 253, 254, 255, 256, 257, 512, 513, 514, 515, 516, 517, 518, 519, 521,
-        522, 523, 524, 525, 526, 527, 528, 529, 530, 531,
+        182, 183, 184, 185, 186, 187, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227,
+        228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 241, 242, 244, 245, 247, 248,
+        249, 251, 253, 254, 255, 256, 257, 512, 513, 514, 515, 516, 517, 518, 519, 521, 522, 523,
+        524, 525, 526, 527, 528, 529, 530, 531,
     ];
 
     pub(crate) fn name_and_description(&self) -> Option<(&'static str, &'static str)> {
@@ -431,7 +427,6 @@ impl Errno {
             185 => Some(("EKEYEXPIRED", "Key has expired")),
             186 => Some(("EKEYREVOKED", "Key has been revoked")),
             187 => Some(("EKEYREJECTED", "Key was rejected by service")),
-            215 => Some(("ENOSYM", "symbol does not exist in executable")),
             216 => Some(("ENOTSOCK", "Socket operation on non-socket")),
             217 => Some(("EDESTADDRREQ", "Destination address required")),
             218 => Some(("EMSGSIZE", "Message too long")),
@@ -459,7 +454,6 @@ impl Errno {
             237 => Some(("ETOOMANYREFS", "Too many references: cannot splice")),
             238 => Some(("ETIMEDOUT", "Connection timed out")),
             239 => Some(("ECONNREFUSED", "Connection refused")),
-            240 => Some(("EREMOTERELEASE", "Remote peer released connection")),
             241 => Some(("EHOSTDOWN", "Host is down")),
             242 => Some(("EHOSTUNREACH", "No route to host")),
             244 => Some(("EALREADY", "Operation already in progress")),

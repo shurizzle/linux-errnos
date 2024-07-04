@@ -28,7 +28,6 @@
     feature = "csky",
     feature = "generic",
     feature = "hexagon",
-    feature = "ia64",
     feature = "loongarch",
     feature = "loongarch64",
     feature = "m68k",
@@ -103,14 +102,6 @@ pub mod csky {
 ))]
 pub mod hexagon {
     //! Error numbers for arch `hexagon`.
-    pub use super::generic::Errno;
-    #[cfg(any(doc, feature = "iter"))]
-    pub use super::generic::ErrnoIter;
-}
-
-#[cfg(any(feature = "ia64", doc))]
-pub mod ia64 {
-    //! Error numbers for arch `ia64`.
     pub use super::generic::Errno;
     #[cfg(any(doc, feature = "iter"))]
     pub use super::generic::ErrnoIter;
